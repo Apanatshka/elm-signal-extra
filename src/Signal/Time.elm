@@ -1,13 +1,13 @@
 module Signal.Time where
 {-| Time related functions for `Signal`s.
 
-# Re-exports
-Some functions from the `Time` module that fit in. 
-@docs since, delay, timestamp
-
 # Easy does it
 Controlling too frequently changing signals. 
 @docs limitRate, dropWithin, settledAfter
+
+# Re-exports
+Some functions from the `Time` module that fit in. 
+@docs since, delay, timestamp
 -}
 
 import Signal (Signal, (<~), (~))
@@ -15,25 +15,25 @@ import Signal
 import Time (Time)
 import Time
 
-{-| Drops non-initial updates within a time window of given duration.
+{-| Limits the given signal to the given frequency. 
 
-After an update of the given signal, the given time is waited (a
-"window"). All other updates within this window are dropped. The
-original update that started the window is kept, without delays. 
+After an update of the given signal, for 1 / the given frequency seconds
+subsequent updates are dropped. The original update that started this
+dropping is kept. 
 
     throttledMouseClicks = limitRate 60 Mouse.clicks
 
-Also known to some areas as a `throttle` function. 
+Also known in some areas as a `throttle` function. 
 -}
-limitRate : Time -> Signal a -> Signal a
-limitRate dur sig = 
-  let within newt oldt = if newt - oldt > second / dur
+limitRate : number -> Signal a -> Signal a
+limitRate freq sig = 
+  let within newt oldt = if newt - oldt > Time.second / freq
                            then newt
                            else oldt
       windowStart = fst <~ timestamp sig
-                    |> foldp within 0
-                    |> dropRepeats
-  in  sampleOn windowStart sig
+                    |> Signal.foldp within 0
+                    |> Signal.dropRepeats
+  in  Signal.sampleOn windowStart sig
 
 {-| Drops all but the first update of a flurry of updates (a stutter).
 The stutter is defined as updates that happen with max. the given time
@@ -46,14 +46,14 @@ time of the last update is dropped.
 
     noDoubleClicks = dropWithin (300 * milliseconds) Mouse.clicks
 
-Also known to some areas as a "immediate" `debounce` function. 
+Also known to some areas as an "immediate" `debounce` function. 
 -}
 dropWithin : Time -> Signal a -> Signal a
 dropWithin delay sig =
   let leading = since delay sig
-                |> dropRepeats
-                |> keepIf ((==) True) False
-  in  sampleOn leading sig
+                |> Signal.dropRepeats
+                |> Signal.keepIf ((==) True) False
+  in  Signal.sampleOn leading sig
 
 {-| Gives the last update of a flurry of updates (a stutter) after has
 settled* for the given time. The stutter is defined as updates that
@@ -69,18 +69,19 @@ the flurry of updates all the time results in a signal that never
 updates. 
 
     tooltip : Signal Bool
-    tooltip = merge (always False <~ Mouse.position) 
-                    (always True  <~ 
-                      settledAfter (500 * milliseconds) Mouse.position)
+    tooltip = 
+      merge (always False <~ Mouse.position) 
+            (always True <~ (Mouse.position
+                            |> settledAfter (500 * Time.millisecond)))
 
-Also known to some areas as a `debounce` function. 
+Also known in some areas as a `debounce` function. 
 -}
 settledAfter : Time -> Signal a -> Signal a
 settledAfter delay sig =
   let trailing = since delay sig
-                |> dropRepeats
-                |> keepIf ((==) False) True
-  in  sampleOn trailing sig
+                |> Signal.dropRepeats
+                |> Signal.keepIf ((==) False) True
+  in  Signal.sampleOn trailing sig
 
 {-| A re-export of [Time.since](http://package.elm-lang.org/packages/elm-lang/core/1.0.0/Time#since). 
 
@@ -89,10 +90,10 @@ for time `t` after every event on the input signal. So ``(second `since`
 Mouse.clicks)`` would result in a signal that is true for one second
 after each mouse click and false otherwise.
 -}
-since : Time -> Signal a -> Signal bool
+since : Time -> Signal a -> Signal Bool
 since = Time.since
 
-{-| A re-export of [Time.since](http://package.elm-lang.org/packages/elm-lang/core/1.0.0/Time#delay). 
+{-| A re-export of [Time.delay](http://package.elm-lang.org/packages/elm-lang/core/1.0.0/Time#delay). 
 
 Delay a signal by a certain amount of time. So `(delay second
 Mouse.clicks)` will update one second later than any mouse click.
