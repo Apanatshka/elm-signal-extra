@@ -1,0 +1,15 @@
+{
+    "version": "1.0.0",
+    "summary": "Signal related advanced and convenient functions",
+    "repository": "https://github.com/Apanatshka/elm-signal-extra.git",
+    "license": "MIT",
+    "source-directories": [
+        "src"
+    ],
+    "exposed-modules": [
+        "Signal.Time"
+    ],
+    "dependencies": {
+        "elm-lang/core": "1.0.0 <= v < 2.0.0"
+    }
+}
