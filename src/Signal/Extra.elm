@@ -6,15 +6,14 @@ module Signal.Extra where
 @docs (~>)
 
 # Zipping and unzipping
-For those too lazy to write a record or ADT.  
+For those too lazy to write a record or union type.  
 @docs zip, zip3, zip4, unzip, unzip3, unzip4
 
 # Stateful
-@docs foldp', foldps, foldps', last, delayRound
+@docs foldp', foldps, foldps', runBuffer, runBuffer', delayRound
 
-# Old filters
-The way they used to work, with weird value propagation. 
-@docs keepWhenS, dropWhenS
+# Quirky filter
+@docs sampleWhen
 -}
 --    Mouse.clicks == 
 --      let runningBuffer = runBuffer 2 Mouse.isDown
@@ -35,37 +34,37 @@ two!
 (~>) = flip map
 infixl 4 ~>
 
-{-| zip two signals
+{-| Zip two signals into a signal of pairs. 
 
     zip Mouse.x Mouse.y == Mouse.position
 -}
 zip : Signal a -> Signal b -> Signal (a,b)
 zip = map2 (,)
 
-{-| zip three signals -}
+{-| -}
 zip3 : Signal a -> Signal b -> Signal c -> Signal (a,b,c)
 zip3 = map3 (,,)
 
-{-| zip four signals -}
+{-| -}
 zip4 : Signal a -> Signal b -> Signal c -> Signal d -> Signal (a,b,c,d)
 zip4 = map4 (,,,)
 
-{-| unzip a zipped pair of signals
+{-| Unzip a signal of pairs to a pair of signals. 
 
     unzip Mouse.position == (Mouse.x, Mouse.y)
 -}
 unzip : Signal (a,b) -> (Signal a, Signal b)
 unzip pairS = (fst <~ pairS, snd <~ pairS)
 
-{-| unzip three signals -}
+{-| -}
 unzip3 : Signal (a,b,c) -> (Signal a, Signal b, Signal c)
 unzip3 pairS = ((\(a,_,_) -> a) <~ pairS, (\(_,b,_) -> b) <~ pairS, (\(_,_,c) -> c) <~ pairS)
 
-{-| unzip four signals -}
+{-| -}
 unzip4 : Signal (a,b,c,d) -> (Signal a, Signal b, Signal c, Signal d)
 unzip4 pairS = ((\(a,_,_,_) -> a) <~ pairS, (\(_,b,_,_) -> b) <~ pairS, (\(_,_,c,_) -> c) <~ pairS, (\(_,_,_,d) -> d) <~ pairS)
 
-{- | `foldp'` is slighty more general than `foldp` in that you can base
+{-| `foldp'` is slighty more general than `foldp` in that you can base
 the initial value of the state on the initial value of the input value. 
 
     foldp f b s == foldp' f (always b) s
@@ -134,7 +133,9 @@ sampleWhen bs def sig =
   in merge filtered sampled
 
 {-| Instead of delaying for some amount of time, delay for one round,
-where a round is initiated by outside event to the Elm program. 
+where a round is initiated by outside event to the Elm program.  
+This may not be be very useful yet. Let the package author know if you
+find a good use!  
 Also known to `delay` in E-FRP. 
 -}
 delayRound : b -> Signal b -> Signal b
