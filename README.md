@@ -11,7 +11,8 @@ time-based operations for Elm `Signal`s anyway.
 
 `Signal.Extra`
 --------------
-Utility functions. Coming soon
+Utility functions. `(~>)`, `zip`/`unzip`s, special `foldp`s, running
+buffers and more. 
 
 `Signal.Discrete`
 -----------------
@@ -19,8 +20,9 @@ Reacting on events. Coming soon
 
 `Signal.Initial`
 ----------------
-Uninitialised signals. Planned, but no promises
+Uninitialised signals. Planned, but I make no promises
 
 `Signal.Alt`
 ------------
-Alternative signal API based on different primitives. Planned, but no promises
+Alternative signal API based on different primitives. Planned, but I
+make no promises
