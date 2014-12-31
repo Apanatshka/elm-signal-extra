@@ -12,6 +12,8 @@ Some functions from the `Time` module that fit in.
 
 import Signal (Signal, (<~), (~))
 import Signal
+import Signal.Extra ((~>))
+import Signal.Discrete as Discrete
 import Time (Time)
 import Time
 
@@ -30,10 +32,8 @@ limitRate freq sig =
   let within newt oldt = if newt - oldt > Time.second / freq
                            then newt
                            else oldt
-      windowStart = fst <~ timestamp sig
-                    |> Signal.foldp within 0
-                    |> Signal.dropRepeats
-  in  Signal.sampleOn windowStart sig
+      windowStart = timestamp sig ~> fst |> Signal.foldp within 0
+  in  Signal.sampleOn (Discrete.whenChange windowStart) sig
 
 {-| Drops all but the first update of a flurry of updates (a stutter).
 The stutter is defined as updates that happen with max. the given time
@@ -50,9 +50,7 @@ Also known to some areas as an "immediate" `debounce` function.
 -}
 dropWithin : Time -> Signal a -> Signal a
 dropWithin delay sig =
-  let leading = since delay sig
-                |> Signal.dropRepeats
-                |> Signal.keepIf ((==) True) False
+  let leading = since delay sig |> Discrete.whenChangeTo True
   in  Signal.sampleOn leading sig
 
 {-| Gives the last update of a flurry of updates (a stutter) after has
@@ -78,9 +76,7 @@ Also known in some areas as a `debounce` function.
 -}
 settledAfter : Time -> Signal a -> Signal a
 settledAfter delay sig =
-  let trailing = since delay sig
-                |> Signal.dropRepeats
-                |> Signal.keepIf ((==) False) True
+  let trailing = since delay sig |> Discrete.whenChangeTo False
   in  Signal.sampleOn trailing sig
 
 {-| A re-export of [Time.since](http://package.elm-lang.org/packages/elm-lang/core/1.0.0/Time#since). 
