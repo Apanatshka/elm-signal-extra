@@ -1,5 +1,5 @@
-Signal Extra
-============
+`signal-extra`
+==============
 
 Signal-related, advanced and convenience functions. 
 
@@ -16,7 +16,8 @@ buffers and more.
 
 `Signal.Discrete`
 -----------------
-Reacting on events. Coming soon
+Reacting on events, to be used in `Signal.sampleOn` or
+`Signal.Discrete.folde`. 
 
 `Signal.Initial`
 ----------------
