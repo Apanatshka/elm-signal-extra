@@ -1,4 +1,4 @@
-module Signal.Discrete(EventSource, es, whenEquals, whenChange, whenChangeTo, folde, switchWhen, switchSample, keepThen) where
+module Signal.Discrete where
 {-| Helper functions for recognising events. Mostly useful in
 combination with `Signal.sampleOn`, although there are uses. 
 
@@ -12,8 +12,6 @@ value, but only when it updates. A prime example is `Mouse.clicks`.
 
 # `foldp` variations
 @docs folde
-
-# Filter extensions
 -}
 
 import Signal
@@ -43,7 +41,7 @@ value.
 fire repeatedly.  
 See also: [`whenChangeTo`](#whenChangeTo). 
 
-    Mouse.click == whenEqual True Mouse.isDown
+    Mouse.clicks == whenEqual True Mouse.isDown
 -}
 whenEquals : a -> Signal a -> EventSource
 whenEquals value input =
@@ -68,35 +66,3 @@ whenChangeTo value input = whenEquals value <| Signal.dropRepeats input
 -}
 folde : (b -> b) -> b -> EventSource -> Signal b
 folde step base evt = Signal.foldp (\_ b -> step b) base evt
-
-{-| Switch between two signals. When the first signal is `True`, use the
- second signal, otherwise use the third. 
--}
-switchWhen : Signal Bool -> Signal a -> Signal a -> Signal a
-switchWhen b l r = switchHelper Signal.keepWhen b l r
-
-{-| Same as the previous, but samples the signal it switches to. -}
-switchSample : Signal Bool -> Signal a -> Signal a -> Signal a
-switchSample b l r = switchHelper Signal.Extra.sampleWhen b l r
-
-switchHelper : (Signal Bool -> Maybe a -> Signal (Maybe a) -> Signal (Maybe a))
-             -> Signal Bool -> Signal a -> Signal a -> Signal a
-switchHelper filter b l r =
-  let bi = Signal.sampleOn (Signal.constant ()) b
-      li = Signal.sampleOn (Signal.constant ()) l
-      ri = Signal.sampleOn (Signal.constant ()) r
-      base = (\bi' li' ri' -> Just <| if bi' then li' else ri') <~ bi ~ li ~ ri
-      lAndR =
-        Signal.merge
-          (filter b Nothing (Just <~ l))
-          (filter (not <~ b) Nothing (Just <~ r))
-      fromJust (Just a) = a
-  in fromJust <~ Signal.merge base lAndR
-
-{-| Like `keepWhen`, but when the filter signal turn `False`, the output
-changes back to the base value. 
--}
-keepThen : Signal Bool -> a -> Signal a -> Signal a
-keepThen choice base signal = 
-  switchWhen choice signal
-    <| always base <~ whenChangeTo False choice

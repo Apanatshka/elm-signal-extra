@@ -1,4 +1,4 @@
-module Signal.Extra where
+module Signal.Extra((~>),zip,zip3,zip4,unzip,unzip3,unzip4,foldp',foldps,foldps',runBuffer,runBuffer',delayRound,sampleWhen,switchWhen,switchSample,keepThen) where
 {-| Utility functions that aren't in the `Signal` module from
 `elm-lang/core`. 
 
@@ -12,13 +12,9 @@ For those too lazy to write a record or union type.
 # Stateful
 @docs foldp', foldps, foldps', runBuffer, runBuffer', delayRound
 
-# Quirky filter
-@docs sampleWhen
+# Quirky filters
+@docs sampleWhen,switchWhen,switchSample,keepThen
 -}
---    Mouse.clicks == 
---      let runningBuffer = runBuffer 2 Mouse.isDown
---          onValue v s = keepIf ((==) True) (s ~> ((==) v))
---      in always () <~ runningBuffer `onValue` [True, False]
 
 import Signal (..)
 import List
@@ -64,6 +60,11 @@ unzip3 pairS = ((\(a,_,_) -> a) <~ pairS, (\(_,b,_) -> b) <~ pairS, (\(_,_,c) ->
 unzip4 : Signal (a,b,c,d) -> (Signal a, Signal b, Signal c, Signal d)
 unzip4 pairS = ((\(a,_,_,_) -> a) <~ pairS, (\(_,b,_,_) -> b) <~ pairS, (\(_,_,c,_) -> c) <~ pairS, (\(_,_,_,d) -> d) <~ pairS)
 
+{-| Drops all updates to a signal, keeps only the initial value.
+-}
+initSignal : Signal a -> Signal a
+initSignal s = sampleOn (constant ()) s
+
 {-| `foldp'` is slighty more general than `foldp` in that you can base
 the initial value of the state on the initial value of the input value. 
 
@@ -72,14 +73,13 @@ the initial value of the state on the initial value of the input value.
 foldp' : (a -> b -> b) -> (a -> b) -> Signal a -> Signal b
 foldp' fun initFun input =
   let -- initial has no events, only the initial value is used
-      initial = initFun <~ sampleOn (constant ()) input
+      initial = initSignal input ~> initFun
       -- both the initial value and the normal input are given to fun'
-      rest = foldp fun' Nothing ((,) <~ input ~ initial)
+      rest = foldp fun' Nothing (zip2 input initial)
       -- when mb is Nothing, input had its first event to use ini
       -- otherwise use the b from Just
-      fun' (inp, ini) mb = case mb of
-        Nothing -> Just <| fun inp ini
-        Just b  -> Just <| fun inp b
+      fun' (inp, ini) mb = Maybe.withDefault init mb
+                            |> fun inp |> Just
       fromJust (Just a) = a
   in  fromJust <~ merge (Just <~ initial) rest
 
@@ -140,3 +140,34 @@ Also known to `delay` in E-FRP.
 -}
 delayRound : b -> Signal b -> Signal b
 delayRound b bS = foldps (\new old -> (old, new)) (b,b) bS
+
+{-| Switch between two signals. When the first signal is `True`, use the
+ second signal, otherwise use the third. 
+-}
+switchWhen : Signal Bool -> Signal a -> Signal a -> Signal a
+switchWhen b l r = switchHelper keepWhen b l r
+
+{-| Same as the previous, but samples the signal it switches to. -}
+switchSample : Signal Bool -> Signal a -> Signal a -> Signal a
+switchSample b l r = switchHelper sampleWhen b l r
+
+switchHelper : (Signal Bool -> Maybe a -> Signal (Maybe a) -> Signal (Maybe a))
+             -> Signal Bool -> Signal a -> Signal a -> Signal a
+switchHelper filter b l r =
+  let base = (\bi li ri -> Just <| if bi then li else ri)
+             <~ initSignal b
+              ~ initSignal l
+              ~ initSignal r
+      lAndR = merge
+                (filter b          Nothing (Just <~ l))
+                (filter (not <~ b) Nothing (Just <~ r))
+      fromJust (Just a) = a
+  in fromJust <~ merge base lAndR
+
+{-| Like `keepWhen`, but when the filter signal turn `False`, the output
+changes back to the base value. 
+-}
+keepThen : Signal Bool -> a -> Signal a -> Signal a
+keepThen choice base signal = 
+  switchWhen choice signal
+    <| always base <~ whenChangeTo False choice
