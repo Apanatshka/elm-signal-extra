@@ -1,9 +1,12 @@
-module Signal.Time where
+module Signal.Time(limitRate, dropWithin, settledAfter, startTime, relativeTime, since, delay, timestamp) where
 {-| Time related functions for `Signal`s.
 
 # Easy does it
 Controlling too frequently changing signals. 
 @docs limitRate, dropWithin, settledAfter
+
+# Relative time
+@docs startTime, relativeTime
 
 # Re-exports
 Some functions from the `Time` module that fit in. 
@@ -78,6 +81,17 @@ settledAfter : Time -> Signal a -> Signal a
 settledAfter delay sig =
   let trailing = since delay sig |> Discrete.whenChangeTo False
   in  Signal.sampleOn trailing sig
+
+{-| The approximate timestamp of the start of the program.
+-}
+startTime : Signal Time
+startTime = fst <~ timestamp (Signal.constant ())
+
+{-| Turns absolute time signal to time relative to the start of the
+program. 
+-}
+relativeTime : Signal Time -> Signal Time
+relativeTime s = (-) <~ s ~ startTime
 
 {-| A re-export of [Time.since](http://package.elm-lang.org/packages/elm-lang/core/1.0.0/Time#since). 
 

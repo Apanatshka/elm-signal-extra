@@ -17,6 +17,7 @@ For those too lazy to write a record or union type.
 -}
 
 import Signal (..)
+import Maybe
 import List
 
 {-| The `(<~)` operator, but flipped. Doesn't play well with the other
@@ -75,10 +76,10 @@ foldp' fun initFun input =
   let -- initial has no events, only the initial value is used
       initial = initSignal input ~> initFun
       -- both the initial value and the normal input are given to fun'
-      rest = foldp fun' Nothing (zip2 input initial)
+      rest = foldp fun' Nothing (zip input initial)
       -- when mb is Nothing, input had its first event to use ini
       -- otherwise use the b from Just
-      fun' (inp, ini) mb = Maybe.withDefault init mb
+      fun' (inp, ini) mb = Maybe.withDefault ini mb
                             |> fun inp |> Just
       fromJust (Just a) = a
   in  fromJust <~ merge (Just <~ initial) rest
@@ -169,5 +170,4 @@ changes back to the base value.
 -}
 keepThen : Signal Bool -> a -> Signal a -> Signal a
 keepThen choice base signal = 
-  switchWhen choice signal
-    <| always base <~ whenChangeTo False choice
+  switchSample choice signal <| constant base
