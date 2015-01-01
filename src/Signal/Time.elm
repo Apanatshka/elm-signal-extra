@@ -20,6 +20,11 @@ import Signal.Discrete as Discrete
 import Time (Time)
 import Time
 
+{-| Keep only the timestamps
+-}
+timestamps : Signal a -> Signal Time
+timestamps s = timestamp s ~> fst
+
 {-| Limits the given signal to the given frequency. 
 
 After an update of the given signal, for 1 / the given frequency seconds
@@ -35,7 +40,7 @@ limitRate freq sig =
   let within newt oldt = if newt - oldt > Time.second / freq
                            then newt
                            else oldt
-      windowStart = timestamp sig ~> fst |> Signal.foldp within 0
+      windowStart = timestamps sig |> Signal.foldp within 0
   in  Signal.sampleOn (Discrete.whenChange windowStart) sig
 
 {-| Drops all but the first update of a flurry of updates (a stutter).
@@ -85,10 +90,14 @@ settledAfter delay sig =
 {-| The approximate timestamp of the start of the program.
 -}
 startTime : Signal Time
-startTime = fst <~ timestamp (Signal.constant ())
+startTime = Signal.constant () |> timestamps
 
 {-| Turns absolute time signal to time relative to the start of the
 program. 
+
+    let tick = Time.every Time.second
+    in  Signal.foldp ((+) 1) 0 tick == 
+          relativeTime tick ~> Time.inSeconds >> round
 -}
 relativeTime : Signal Time -> Signal Time
 relativeTime s = (-) <~ s ~ startTime
