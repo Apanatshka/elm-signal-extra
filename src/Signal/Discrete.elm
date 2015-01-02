@@ -1,4 +1,4 @@
-module Signal.Discrete where
+module Signal.Discrete(EventSource, es, whenEqual, whenChange, whenChangeTo, folde) where
 {-| Helper functions for recognising events. Mostly useful in
 combination with `Signal.sampleOn`, although there are uses. 
 
@@ -8,7 +8,7 @@ value, but only when it updates. A prime example is `Mouse.clicks`.
 @docs EventSource, es
 
 # Basics
-@docs whenEquals, whenChange, whenChangeTo
+@docs whenEqual, whenChange, whenChangeTo
 
 # `foldp` variations
 @docs folde
@@ -43,8 +43,8 @@ See also: [`whenChangeTo`](#whenChangeTo).
 
     Mouse.clicks == whenEqual True Mouse.isDown
 -}
-whenEquals : a -> Signal a -> EventSource
-whenEquals value input =
+whenEqual : a -> Signal a -> EventSource
+whenEqual value input =
   let matchEvent = Signal.keepIf ((==) value) value input
   in es matchEvent
 
@@ -58,7 +58,7 @@ whenChange input = es <| Signal.dropRepeats input
     spacebarPress = whenChangeTo True Keyboard.spacebar
 -}
 whenChangeTo: a -> Signal a -> EventSource
-whenChangeTo value input = whenEquals value <| Signal.dropRepeats input
+whenChangeTo value input = whenEqual value <| Signal.dropRepeats input
 
 {-| `foldp` on an `EventSource`.
 
