@@ -1,5 +1,5 @@
 {
-    "version": "3.0.0",
+    "version": "3.1.0",
     "summary": "Signal-related, advanced and convenience functions",
     "repository": "https://github.com/Apanatshka/elm-signal-extra.git",
     "license": "MIT",

@@ -1,4 +1,4 @@
-module Signal.Extra((~>),zip,zip3,zip4,unzip,unzip3,unzip4,foldp',foldps,foldps',runBuffer,runBuffer',delayRound,sampleWhen,switchWhen,switchSample,keepThen) where
+module Signal.Extra((~>),zip,zip3,zip4,unzip,unzip3,unzip4,foldp',foldps,foldps',runBuffer,runBuffer',delayRound,sampleWhen,switchWhen,switchSample,keepThen,fairMerge) where
 {-| Utility functions that aren't in the `Signal` module from
 `elm-lang/core`. 
 
@@ -14,6 +14,9 @@ For those too lazy to write a record or union type.
 
 # Quirky filters
 @docs sampleWhen,switchWhen,switchSample,keepThen
+
+# Merge without bias
+@docs fairMerge
 -}
 
 import Signal (..)
@@ -98,6 +101,18 @@ foldps f bs aS = fst <~ foldp (\a (_,s) -> f a s) bs aS
 foldps' : (a -> s -> (b,s)) -> (a -> (b,s)) -> Signal a -> Signal b
 foldps' f iF aS = fst <~ foldp' (\a (_,s) -> f a s) iF aS
 
+{-| Not sure if this is useful for people, but it's a convenient building block:
+
+    foldps == foldpWith id
+    foldp f b ==
+      let d a = (a,a)
+      in foldpWith d f (d b)
+-}
+foldpWith : (h -> (b,s)) -> (a -> s -> h) -> (b,s) -> Signal a -> Signal b
+foldpWith unpack step init input =
+  let step' a (_,s) = step a s |> unpack -- : a -> (b,s) -> (b,s)
+  in foldp step' init input ~> fst
+
 {-| A running buffer of the given size (`n`) of the given signal. 
 The list of at most `n` of the last values on the input signal. Starts
 with an empty list. Adds new values to the *end* of the list! So you get
@@ -171,3 +186,24 @@ changes back to the base value.
 keepThen : Signal Bool -> a -> Signal a -> Signal a
 keepThen choice base signal = 
   switchSample choice signal <| constant base
+
+{-| A function that merges the events of two signals, and takes a
+resolution function for the (usually rare) case that the signals update
+in the same "round". 
+
+    fairMerge (\l r -> l) == merge
+-}
+fairMerge : (a -> a -> a) -> Signal a -> Signal a -> Signal a
+fairMerge resolve left right =
+  let boolLeft  = always True <~ left
+      boolRight = always False <~ right
+      bothUpdated = (/=) <~ (merge boolLeft boolRight) ~ (merge boolLeft boolRight)
+      
+      fromJust (Just a) = a
+      map2 f m1 m2 = Maybe.map f m1 `Maybe.andThen` (\f' -> Maybe.map f' m2)
+      
+      keep s = keepWhen bothUpdated Nothing (Just <~ s)
+      resolved = map2 resolve <~ keep left ~ keep right
+      merged = merge left right
+      resolved' = fromJust <~ merge (Just <~ initSignal merged) resolved
+  in merged |> merge resolved'
