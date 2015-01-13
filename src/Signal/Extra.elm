@@ -186,6 +186,12 @@ changes back to the base value.
 keepThen : Signal Bool -> a -> Signal a -> Signal a
 keepThen choice base signal = 
   switchSample choice signal <| constant base
+  
+keepWhenI fs s = 
+  let fromJust m = case m of
+    Just a -> a
+    Nothing -> Debug.crash "keepWhenI: used filter signal that isn't true from the initial value"
+  in keepWhen fs Nothing (Just <~ s) ~> fromJust
 
 {-| A function that merges the events of two signals, and takes a
 resolution function for the (usually rare) case that the signals update
@@ -199,11 +205,7 @@ fairMerge resolve left right =
       boolRight = always False <~ right
       bothUpdated = (/=) <~ (merge boolLeft boolRight) ~ (merge boolRight boolLeft)
       
-      fromJust (Just a) = a
-      map2 f m1 m2 = Maybe.map f m1 `Maybe.andThen` (\f' -> Maybe.map f' m2)
-      
-      keep s = keepWhen bothUpdated Nothing (Just <~ s)
-      resolved = map2 resolve <~ keep left ~ keep right
+      keep = keepWhenI bothUpdated
+      resolved = resolve <~ keep left ~ keep right
       merged = merge left right
-      resolved' = fromJust <~ merge (Just <~ initSignal merged) resolved
-  in merged |> merge resolved'
+  in merged |> merge resolved
