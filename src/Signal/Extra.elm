@@ -197,7 +197,7 @@ fairMerge : (a -> a -> a) -> Signal a -> Signal a -> Signal a
 fairMerge resolve left right =
   let boolLeft  = always True <~ left
       boolRight = always False <~ right
-      bothUpdated = (/=) <~ (merge boolLeft boolRight) ~ (merge boolLeft boolRight)
+      bothUpdated = (/=) <~ (merge boolLeft boolRight) ~ (merge boolRight boolLeft)
       
       fromJust (Just a) = a
       map2 f m1 m2 = Maybe.map f m1 `Maybe.andThen` (\f' -> Maybe.map f' m2)
