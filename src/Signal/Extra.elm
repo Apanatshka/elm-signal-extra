@@ -223,6 +223,13 @@ combine : List (Signal a) -> Signal (List a)
 combine = mapMany identity
 
 {-| Apply a function to the current value of many signals. The
-function is reevaluated whenever any signal changes. -}
+function is reevaluated whenever any signal changes. A typical use case:
+
+      mapMany (flow down) [sig_elem1, sig_elem2, sig_elem3]
+
+Note how this is nicer (and more extendable) than the equivalent:
+
+      Signal.map3 (\e1 e2 e3 -> flow down [e1, e2, e3]) sig_elem1 sig_elem2 sig_elem3
+-}
 mapMany : (List a -> b) -> List (Signal a) -> Signal b
 mapMany f = List.foldr (map2 (::)) (constant []) >> map f
