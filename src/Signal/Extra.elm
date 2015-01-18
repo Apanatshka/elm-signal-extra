@@ -220,9 +220,9 @@ Whenever you are in a situation where you write something like
 
 you are better off directly using `mapMany f signals`. -}
 combine : List (Signal a) -> Signal (List a)
-combine = List.foldr (map2 (::)) (constant [])
+combine = mapMany identity
 
 {-| Apply a function to the current value of many signals. The
 function is reevaluated whenever any signal changes. -}
 mapMany : (List a -> b) -> List (Signal a) -> Signal b
-mapMany f = combine >> map f
+mapMany f = List.foldr (map2 (::)) (constant []) >> map f
