@@ -1,4 +1,4 @@
-module Signal.Extra((~>),zip,zip3,zip4,unzip,unzip3,unzip4,foldp',foldps,foldps',runBuffer,runBuffer',delayRound,sampleWhen,switchWhen,switchSample,keepThen,fairMerge,combine) where
+module Signal.Extra((~>),zip,zip3,zip4,unzip,unzip3,unzip4,foldp',foldps,foldps',runBuffer,runBuffer',delayRound,sampleWhen,switchWhen,switchSample,keepThen,fairMerge,combine,mapMany) where
 {-| Utility functions that aren't in the `Signal` module from
 `elm-lang/core`. 
 
@@ -213,3 +213,7 @@ fairMerge resolve left right =
 {-| Combine a list of signals into a signal of lists. -}
 combine : List (Signal a) -> Signal (List a)
 combine = List.foldr (map2 (::)) (constant [])
+
+{-| Combine a list of signals using a function. -}
+mapMany : (List a -> b) -> List (Signal a) -> Signal b
+mapMany f = combine >> map f
