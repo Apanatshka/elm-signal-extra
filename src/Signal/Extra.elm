@@ -194,9 +194,9 @@ keepWhenI fs s =
   let fromJust (Just a) = a
   in keepWhen (merge (constant True) fs) Nothing (Just <~ s) ~> fromJust
 
-{-| A function that merges the events of two signals, and takes a
-resolution function for the (usually rare) case that the signals update
-in the same "round". 
+{-| A function that merges the events of two signals without bias
+(unlike `Signal.merge`). It takes a resolution function for the
+(usually rare) case that the signals update in the same "round".
 
     fairMerge (\l r -> l) == merge
 -}
@@ -215,7 +215,7 @@ fairMerge resolve left right =
 
       combine = mapMany identity
 
-Whenever you are in a situation where you write something like
+Also, whenever you are in a situation where you write something like
 
       Signal.map f (combine signals)
 
@@ -231,6 +231,8 @@ function is reevaluated whenever any signal changes. A typical use case:
 Note how this is nicer (and more extendable) than the equivalent:
 
       Signal.map3 (\e1 e2 e3 -> flow down [e1, e2, e3]) sig_elem1 sig_elem2 sig_elem3
+
+Also, `mapMany List.maximum : List (Signal comparable) -> Signal comparable`.
 -}
 mapMany : (List a -> b) -> List (Signal a) -> Signal b
 mapMany f = List.foldr (map2 (::)) (constant []) >> map f
