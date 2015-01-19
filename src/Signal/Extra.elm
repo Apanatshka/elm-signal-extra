@@ -188,8 +188,10 @@ keepThen : Signal Bool -> a -> Signal a -> Signal a
 keepThen choice base signal = 
   switchSample choice signal <| constant base
   
-{-| `keepWhen` but always keeps the initial value rather than trying to filter it
+{-| `keepWhen` but always keeps the initial value rather than trying to
+filter it. 
 -}
+keepWhenI : Signal Bool -> Signal a -> Signal a
 keepWhenI fs s = 
   let fromJust (Just a) = a
   in keepWhen (merge (constant True) fs) Nothing (Just <~ s) ~> fromJust
