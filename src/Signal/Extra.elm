@@ -22,6 +22,7 @@ For those too lazy to write a record or union type.
 import Signal (..)
 import Maybe
 import List
+import List ((::))
 
 {-| The `(<~)` operator, but flipped. Doesn't play well with the other
 two!
