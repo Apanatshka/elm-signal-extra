@@ -1,4 +1,4 @@
-module Signal.Extra((~>),zip,zip3,zip4,unzip,unzip3,unzip4,foldp',foldps,foldps',runBuffer,runBuffer',delayRound,sampleWhen,switchWhen,switchSample,keepThen,fairMerge) where
+module Signal.Extra((~>),zip,zip3,zip4,unzip,unzip3,unzip4,foldp',foldps,foldps',runBuffer,runBuffer',delayRound,sampleWhen,switchWhen,switchSample,keepThen,fairMerge,combine,mapMany) where
 {-| Utility functions that aren't in the `Signal` module from
 `elm-lang/core`. 
 
@@ -15,13 +15,14 @@ For those too lazy to write a record or union type.
 # Quirky filters
 @docs sampleWhen,switchWhen,switchSample,keepThen
 
-# Merge without bias
-@docs fairMerge
+# Combining
+@docs fairMerge, combine, mapMany
 -}
 
 import Signal (..)
 import Maybe
 import List
+import List ((::))
 
 {-| The `(<~)` operator, but flipped. Doesn't play well with the other
 two!
@@ -193,9 +194,9 @@ keepWhenI fs s =
   let fromJust (Just a) = a
   in keepWhen (merge (constant True) fs) Nothing (Just <~ s) ~> fromJust
 
-{-| A function that merges the events of two signals, and takes a
-resolution function for the (usually rare) case that the signals update
-in the same "round". 
+{-| A function that merges the events of two signals without bias
+(unlike `Signal.merge`). It takes a resolution function for the
+(usually rare) case that the signals update in the same "round".
 
     fairMerge (\l r -> l) == merge
 -}
@@ -209,3 +210,31 @@ fairMerge resolve left right =
       resolved = resolve <~ keep left ~ keep right
       merged = merge left right
   in merged |> merge resolved
+
+{-| Combine a list of signals into a signal of lists. We have
+
+      combine = mapMany identity
+
+Also, whenever you are in a situation where you write something like
+
+      Signal.map f (combine signals)
+
+you are better off directly using `mapMany f signals`. -}
+combine : List (Signal a) -> Signal (List a)
+combine = mapMany identity
+
+{-| Apply a function to the current value of many signals. The
+function is reevaluated whenever any signal changes. A typical use case:
+
+      mapMany (flow down) [sig_elem1, sig_elem2, sig_elem3]
+
+Note how this is nicer (and more extendable) than the equivalent:
+
+      Signal.map3 (\e1 e2 e3 -> flow down [e1, e2, e3]) sig_elem1 sig_elem2 sig_elem3
+
+Also, `mapMany List.maximum : List (Signal comparable) -> Signal comparable`
+gives a signal that always carries the maximum value from all its
+input signals.
+-}
+mapMany : (List a -> b) -> List (Signal a) -> Signal b
+mapMany f = List.foldr (map2 (::)) (constant []) >> map f
