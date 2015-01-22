@@ -16,7 +16,7 @@ For those too lazy to write a record or union type.
 @docs sampleWhen,switchWhen,switchSample,keepThen
 
 # Combining
-@docs fairMerge, combine, mapMany
+@docs fairMerge, combine, mapMany, applyMany
 -}
 
 import Signal (..)
