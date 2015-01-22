@@ -1,4 +1,4 @@
-module Signal.Extra((~>),zip,zip3,zip4,unzip,unzip3,unzip4,foldp',foldps,foldps',runBuffer,runBuffer',delayRound,sampleWhen,switchWhen,switchSample,keepThen,fairMerge,combine,mapMany) where
+module Signal.Extra((~>),zip,zip3,zip4,unzip,unzip3,unzip4,foldp',foldps,foldps',runBuffer,runBuffer',delayRound,sampleWhen,switchWhen,switchSample,keepThen,fairMerge,combine,mapMany,applyMany) where
 {-| Utility functions that aren't in the `Signal` module from
 `elm-lang/core`. 
 
@@ -223,7 +223,7 @@ Also, whenever you are in a situation where you write something like
 
 you are better off directly using `mapMany f signals`. -}
 combine : List (Signal a) -> Signal (List a)
-combine = mapMany identity
+combine = List.foldr (map2 (::)) (constant [])
 
 {-| Apply a function to the current value of many signals. The
 function is reevaluated whenever any signal changes. A typical use case:
@@ -239,4 +239,10 @@ gives a signal that always carries the maximum value from all its
 input signals.
 -}
 mapMany : (List a -> b) -> List (Signal a) -> Signal b
-mapMany f = List.foldr (map2 (::)) (constant []) >> map f
+mapMany f l = f <~ combine l
+
+{-| Apply functions in a signal to the current value of many signals.
+The result is reevaluated whenever any signal changes. 
+-}
+applyMany : Signal (List a -> b) -> List (Signal a) -> Signal b
+applyMany fs l = fs ~ combine l
