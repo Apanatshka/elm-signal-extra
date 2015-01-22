@@ -87,7 +87,7 @@ settledAfter delay sig =
   let trailing = since delay sig |> Discrete.whenChangeTo False
   in  Signal.sampleOn trailing sig
 
-{-| The approximate timestamp of the start of the program.
+{-| The timestamp of the start of the program.
 -}
 startTime : Signal Time
 startTime = Signal.constant () |> timestamps
