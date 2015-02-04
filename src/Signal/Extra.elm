@@ -213,6 +213,20 @@ filter initial =
 filterMap : (a -> Maybe b) -> b -> Signal a -> Signal b
 filterMap f initial = filter initial << map f
 
+{-| Apply a fold that may fail, ignore any non-changes. 
+-}
+filterFold : (a -> b -> Maybe b) -> b -> Signal a -> Signal b
+filterFold f initial =
+  let f' a s =
+    let res = f a s
+    in (res, Maybe.withDefault s res)
+  in
+    foldps f' (Just initial,initial)
+    >> filter
+-- if it was a (a -> Maybe (b -> b)), the implementation would have been easier:
+-- filterFold f initial input = filterMap f identity input |> foldp (<|) initial
+
+
 {-| A function that merges the events of two signals without bias
 (unlike `Signal.merge`). It takes a resolution function for the
 (usually rare) case that the signals update in the same "round".
