@@ -1,4 +1,4 @@
-module Signal.Extra((~>),zip,zip3,zip4,unzip,unzip3,unzip4,foldp',foldps,foldps',runBuffer,runBuffer',delayRound,sampleWhen,switchWhen,switchSample,keepThen,fairMerge,combine,mapMany,applyMany) where
+module Signal.Extra((~>),zip,zip3,zip4,unzip,unzip3,unzip4,foldp',foldps,foldps',runBuffer,runBuffer',delayRound,sampleWhen,switchWhen,keepWhenI,switchSample,keepThen,fairMerge,combine,mapMany,applyMany) where
 {-| Utility functions that aren't in the `Signal` module from
 `elm-lang/core`. 
 
@@ -12,8 +12,11 @@ For those too lazy to write a record or union type.
 # Stateful
 @docs foldp', foldps, foldps', runBuffer, runBuffer', delayRound
 
+# Switching
+@docs switchWhen,switchSample
+
 # Quirky filters
-@docs sampleWhen,switchWhen,switchSample,keepThen
+@docs sampleWhen,keepThen,keepWhenI
 
 # Combining
 @docs fairMerge, combine, mapMany, applyMany
@@ -135,20 +138,6 @@ runBuffer' l n input =
         else List.drop (l-n+1) prev ++ [inp]
   in foldp f l input
 
-{-| A combination of `Signal.sampleOn` and `Signal.keepWhen`. When the
-first signal becomes `True`, the most recent value of the second signal
-will be propagated.  
-[Before Elm 0.12](
-https://github.com/elm-lang/elm-compiler/blob/master/changelog.md#012)
- this was the standard behaviour of `keepWhen`.
--}
-sampleWhen : Signal Bool -> a -> Signal a -> Signal a
-sampleWhen bs def sig =
-  let filtered = keepWhen bs def sig
-      sampled  = sampleOn bsTurnsTrue sig
-      bsTurnsTrue = keepIf ((==) True) False (dropRepeats bs)
-  in merge filtered sampled
-
 {-| Instead of delaying for some amount of time, delay for one round,
 where a round is initiated by outside event to the Elm program.  
 This may not be be very useful yet. Let the package author know if you
@@ -180,6 +169,20 @@ switchHelper filter b l r =
                 (filter (not <~ b) Nothing (Just <~ r))
       fromJust (Just a) = a
   in fromJust <~ merge base lAndR
+
+{-| A combination of `Signal.sampleOn` and `Signal.keepWhen`. When the
+first signal becomes `True`, the most recent value of the second signal
+will be propagated.  
+[Before Elm 0.12](
+https://github.com/elm-lang/elm-compiler/blob/master/changelog.md#012)
+ this was the standard behaviour of `keepWhen`.
+-}
+sampleWhen : Signal Bool -> a -> Signal a -> Signal a
+sampleWhen bs def sig =
+  let filtered = keepWhen bs def sig
+      sampled  = sampleOn bsTurnsTrue sig
+      bsTurnsTrue = keepIf ((==) True) False (dropRepeats bs)
+  in merge filtered sampled
 
 {-| Like `keepWhen`, but when the filter signal turn `False`, the output
 changes back to the base value. 
