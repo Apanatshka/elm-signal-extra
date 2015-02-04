@@ -200,7 +200,7 @@ keepWhenI fs s =
 -}
 filter : a -> Signal (Maybe a) -> Signal a
 filter initial =
-  keepIf (\mx -> mx /= Nothing) (Just initial)
+  keepIf (\mx -> case mx of { Nothing -> False; _ -> True }) (Just initial)
   >> map (\mx -> let (Just x) = mx in x)
 
 {-| Apply a function that may succeed to all values in the signal, but only keep the successes.
