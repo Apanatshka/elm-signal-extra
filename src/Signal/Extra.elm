@@ -1,4 +1,4 @@
-module Signal.Extra((~>),zip,zip3,zip4,unzip,unzip3,unzip4,foldp',foldps,foldps',runBuffer,runBuffer',delayRound,sampleWhen,switchWhen,keepWhenI,switchSample,keepThen,filter,filterMap,fairMerge,combine,mapMany,applyMany) where
+module Signal.Extra((~>),zip,zip3,zip4,unzip,unzip3,unzip4,foldp',foldps,foldps',runBuffer,runBuffer',delayRound,sampleWhen,switchWhen,keepWhenI,switchSample,keepThen,filter,filterMap,filterFold,fairMerge,combine,mapMany,applyMany) where
 {-| Utility functions that aren't in the `Signal` module from
 `elm-lang/core`. 
 
@@ -222,7 +222,7 @@ filterFold f initial =
     in (res, Maybe.withDefault s res)
   in
     foldps f' (Just initial,initial)
-    >> filter
+    >> filter initial
 -- if it was a (a -> Maybe (b -> b)), the implementation would have been easier:
 -- filterFold f initial input = filterMap f identity input |> foldp (<|) initial
 
