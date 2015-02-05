@@ -208,7 +208,7 @@ filter initial =
 
 {-| Apply a function that may succeed to all values in the signal, but only keep the successes.
 
-    filterMap f initial signal == filter initial << map f
+    filterMap f initial == filter initial << map f
 -}
 filterMap : (a -> Maybe b) -> b -> Signal a -> Signal b
 filterMap f initial = filter initial << map f
