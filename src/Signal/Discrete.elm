@@ -14,9 +14,7 @@ value, but only when it updates. A prime example is `Mouse.clicks`.
 @docs folde
 -}
 
-import Signal
-import Signal ((<~), (~), Signal)
-import Signal.Extra
+import Signal exposing ((<~), (~), Signal)
 
 {-| At some point in the future Elm will probably support something like
 this:
@@ -27,7 +25,8 @@ That is, `EventSource` will become an alias for any `Signal a` where we
 hide the `a` part.  
 Until then, there is the `es` function to create an EventSource
 -}
-type alias EventSource = Signal ()
+type alias EventSource =
+  Signal ()
 
 {-| Simple way to make an event signal from any signal
 -}
@@ -45,24 +44,30 @@ See also: [`whenChangeTo`](#whenChangeTo).
 -}
 whenEqual : a -> Signal a -> EventSource
 whenEqual value input =
-  let matchEvent = Signal.keepIf ((==) value) value input
-  in es matchEvent
+  let
+    matchEvent = 
+      Signal.keepIf ((==) value) value input
+  in
+    es matchEvent
 
 {-| Fires when the value of the input signal changes. 
 -}
 whenChange : Signal a -> EventSource
-whenChange input = es <| Signal.dropRepeats input
+whenChange input =
+  es <| Signal.dropRepeats input
 
 {-| Fires when the value of the input signal changes to the given value.
 
     spacebarPress = whenChangeTo True Keyboard.spacebar
 -}
 whenChangeTo: a -> Signal a -> EventSource
-whenChangeTo value input = whenEqual value <| Signal.dropRepeats input
+whenChangeTo value input =
+  whenEqual value <| Signal.dropRepeats input
 
 {-| `foldp` on an `EventSource`.
 
     toggleOnEnter = folde not False <| whenChangeTo True Keyboard.enter
 -}
 folde : (b -> b) -> b -> EventSource -> Signal b
-folde step base evt = Signal.foldp (\_ b -> step b) base evt
+folde step base evt =
+  Signal.foldp (\_ b -> step b) base evt

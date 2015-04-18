@@ -13,17 +13,17 @@ Some functions from the `Time` module that fit in.
 @docs since, delay, timestamp
 -}
 
-import Signal (Signal, (<~), (~))
-import Signal
-import Signal.Extra ((~>))
+import Signal exposing (Signal, (<~), (~))
+import Signal.Extra exposing ((~>))
 import Signal.Discrete as Discrete
-import Time (Time)
-import Time
+import Time exposing (Time)
 
 {-| Keep only the timestamps
 -}
 timestamps : Signal a -> Signal Time
-timestamps s = timestamp s ~> fst
+timestamps s =
+  timestamp s ~> fst
+
 
 {-| Limits the given signal to the given frequency. 
 
@@ -37,11 +37,15 @@ Also known in some areas as a `throttle` function.
 -}
 limitRate : number -> Signal a -> Signal a
 limitRate freq sig = 
-  let within newt oldt = if newt - oldt > Time.second / freq
-                           then newt
-                           else oldt
-      windowStart = timestamps sig |> Signal.foldp within 0
-  in  Signal.sampleOn (Discrete.whenChange windowStart) sig
+  let
+    within newt oldt =
+      if newt - oldt > Time.second / freq
+        then newt
+        else oldt
+    windowStart = timestamps sig |> Signal.foldp within 0
+  in
+    Signal.sampleOn (Discrete.whenChange windowStart) sig
+
 
 {-| Drops all but the first update of a flurry of updates (a stutter).
 The stutter is defined as updates that happen with max. the given time
@@ -58,8 +62,11 @@ Also known to some areas as an "immediate" `debounce` function.
 -}
 dropWithin : Time -> Signal a -> Signal a
 dropWithin delay sig =
-  let leading = since delay sig |> Discrete.whenChangeTo True
-  in  Signal.sampleOn leading sig
+  let
+    leading = since delay sig |> Discrete.whenChangeTo True
+  in
+    Signal.sampleOn leading sig
+
 
 {-| Gives the last update of a flurry of updates (a stutter) after has
 settled* for the given time. The stutter is defined as updates that
@@ -84,13 +91,17 @@ Also known in some areas as a `debounce` function.
 -}
 settledAfter : Time -> Signal a -> Signal a
 settledAfter delay sig =
-  let trailing = since delay sig |> Discrete.whenChangeTo False
-  in  Signal.sampleOn trailing sig
+  let
+    trailing = since delay sig |> Discrete.whenChangeTo False
+  in
+    Signal.sampleOn trailing sig
+
 
 {-| The timestamp of the start of the program.
 -}
 startTime : Signal Time
 startTime = Signal.constant () |> timestamps
+
 
 {-| Turns absolute time signal to time relative to the start of the
 program. 
@@ -100,7 +111,9 @@ program.
           relativeTime tick ~> Time.inSeconds >> round
 -}
 relativeTime : Signal Time -> Signal Time
-relativeTime s = (-) <~ s ~ startTime
+relativeTime s =
+  (-) <~ s ~ startTime
+
 
 {-| A re-export of [Time.since](http://package.elm-lang.org/packages/elm-lang/core/1.0.0/Time#since). 
 
