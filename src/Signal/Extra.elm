@@ -1,4 +1,4 @@
-module Signal.Extra((~>),zip,zip3,zip4,unzip,unzip3,unzip4,foldp',foldps,foldps',runBuffer,runBuffer',delayRound,sampleWhen,switchWhen,keepWhenI,switchSample,keepThen,filter,filterMap,filterFold,fairMerge,combine,mapMany,applyMany) where
+module Signal.Extra((~>),zip,zip3,zip4,unzip,unzip3,unzip4,foldp',foldps,foldps',runBuffer,runBuffer',delayRound,keepIf,keepWhen,sampleWhen,switchWhen,keepWhenI,switchSample,keepThen,filter,filterMap,filterFold,fairMerge,combine,mapMany,applyMany) where
 {-| Utility functions that aren't in the `Signal` module from
 `elm-lang/core`. 
 
