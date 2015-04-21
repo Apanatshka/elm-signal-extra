@@ -45,8 +45,9 @@ See also: [`whenChangeTo`](#whenChangeTo).
 whenEqual : a -> Signal a -> EventSource
 whenEqual value input =
   let
+    keepIf = Signal.filter
     matchEvent = 
-      Signal.keepIf ((==) value) value input
+      keepIf ((==) value) value input
   in
     es matchEvent
 

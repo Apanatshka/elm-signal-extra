@@ -15,14 +15,14 @@ For those too lazy to write a record or union type.
 # Switching
 @docs switchWhen,switchSample
 
-# Quirky filters
-@docs sampleWhen,keepThen,keepWhenI,filter,filterMap
+# Filters
+@docs keepIf,keepWhen,sampleWhen,keepThen,keepWhenI,filter,filterMap
 
 # Combining
 @docs fairMerge, combine, mapMany, applyMany
 -}
 
-import Signal exposing (..)
+import Signal exposing (map,map2,map3,map4,(<~),(~),sampleOn,constant,foldp,merge,dropRepeats)
 
 {-| The `(<~)` operator, but flipped. Doesn't play well with the other
 two!
@@ -197,21 +197,37 @@ switchHelper : (Signal Bool -> Maybe a -> Signal (Maybe a) -> Signal (Maybe a))
              -> Signal Bool -> Signal a -> Signal a -> Signal a
 switchHelper filter b l r =
   let
-    base = (\bi li ri -> Just <| if bi then li else ri)
+    base =
+      (\bi li ri -> Just <| if bi then li else ri)
       <~ initSignal b
        ~ initSignal l
        ~ initSignal r
     
-    lAndR = merge
-      (filter b          Nothing (Just <~ l))
-      (filter (not <~ b) Nothing (Just <~ r))
+    lAndR =
+      merge
+        (filter b          Nothing (Just <~ l))
+        (filter (not <~ b) Nothing (Just <~ r))
     
     fromJust (Just a) = a
   in
     fromJust <~ merge base lAndR
 
+{-| The old name for `Signal.filter`, which doesn't confuse you with what the `Bool` value means. 
+-}
+keepIf : (a -> Bool) -> a -> Signal a -> Signal a
+keepIf = Signal.filter
 
-{-| A combination of `Signal.sampleOn` and `Signal.keepWhen`. When the
+{-| The good old `keepWhen` filter that keeps events from the `Signal a` as long as the
+`Signal Bool` is true. 
+-}
+keepWhen : Signal Bool -> a -> Signal a -> Signal a
+keepWhen boolSig a aSig =
+  zip boolSig aSig
+  |> sampleOn aSig
+  |> keepIf fst (True, a)
+  |> map snd
+
+{-| A combination of `Signal.sampleOn` and `keepWhen`. When the
 first signal becomes `True`, the most recent value of the second signal
 will be propagated.  
 [Before Elm 0.12](
@@ -220,12 +236,9 @@ https://github.com/elm-lang/elm-compiler/blob/master/changelog.md#012)
 -}
 sampleWhen : Signal Bool -> a -> Signal a -> Signal a
 sampleWhen bs def sig =
-  let
-    filtered = keepWhen bs def sig
-    sampled  = sampleOn bsTurnsTrue sig
-    bsTurnsTrue = keepIf ((==) True) False (dropRepeats bs)
-  in
-    merge filtered sampled
+  zip bs sig
+  |> keepIf fst (True, def)
+  |> map snd
 
 
 {-| Like `keepWhen`, but when the filter signal turn `False`, the output
