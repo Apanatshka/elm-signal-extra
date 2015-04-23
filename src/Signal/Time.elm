@@ -25,21 +25,22 @@ timestamps s =
   timestamp s ~> fst
 
 
-{-| Limits the given signal to the given frequency. 
+{-| Limits the given signal to output a maximum of one message within
+the given time period.
 
-After an update of the given signal, for 1 / the given frequency seconds
-subsequent updates are dropped. The original update that started this
-dropping is kept. 
+After an update of the given signal, for the given period subsequent
+updates are dropped. The original update that started this dropping is
+kept. 
 
     throttledMouseClicks = limitRate 60 Mouse.clicks
 
 Also known in some areas as a `throttle` function. 
 -}
-limitRate : number -> Signal a -> Signal a
-limitRate freq sig = 
+limitRate : Time -> Signal a -> Signal a
+limitRate period sig = 
   let
     within newt oldt =
-      if newt - oldt > Time.second / freq
+      if newt - oldt > period
         then newt
         else oldt
     windowStart = timestamps sig |> Signal.foldp within 0
