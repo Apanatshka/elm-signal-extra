@@ -335,9 +335,10 @@ Note how this is nicer (and more extendable) than the equivalent:
 
       Signal.map3 (\e1 e2 e3 -> flow down [e1, e2, e3]) sig_elem1 sig_elem2 sig_elem3
 
-Also, `mapMany List.maximum : List (Signal comparable) -> Signal comparable`
-gives a signal that always carries the maximum value from all its
-input signals.
+Also, `mapMany List.maximum : List (Signal comparable) -> Signal (Maybe comparable)`
+gives a signal that always carries `Just` the maximum value from all its
+input signals, unless the input signal list is empty, in which case the returned
+signal is equivalent to `constant Nothing`.
 -}
 mapMany : (List a -> b) -> List (Signal a) -> Signal b
 mapMany f l =
