@@ -22,7 +22,7 @@ For those too lazy to write a record or union type.
 @docs fairMerge, combine, mapMany, applyMany
 -}
 
-import Signal exposing (map,map2,map3,map4,(<~),(~),sampleOn,constant,foldp,merge,dropRepeats)
+import Signal exposing (map,map2,map3,map4,(<~),(~),sampleOn,constant,foldp,merge,dropRepeats,filterMap)
 
 {-| The `(<~)` operator, but flipped. Doesn't play well with the other
 two!
@@ -262,18 +262,7 @@ keepWhenI fs s =
 {-| Filter a signal of optional values, discarding `Nothing`s.
 -}
 filter : a -> Signal (Maybe a) -> Signal a
-filter initial =
-  keepIf (\mx -> case mx of { Nothing -> False; _ -> True }) (Just initial)
-  >> map (\mx -> let (Just x) = mx in x)
-
-
-{-| Apply a function that may succeed to all values in the signal, but only keep the successes.
-
-    filterMap f initial == filter initial << map f
--}
-filterMap : (a -> Maybe b) -> b -> Signal a -> Signal b
-filterMap f initial =
-  map f >> filter initial
+filter initial = filterMap id initial
 
 
 {-| Apply a fold that may fail, ignore any non-changes. 
