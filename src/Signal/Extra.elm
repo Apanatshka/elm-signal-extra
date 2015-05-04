@@ -1,4 +1,4 @@
-module Signal.Extra((~>),zip,zip3,zip4,unzip,unzip3,unzip4,foldp',foldps,foldps',runBuffer,runBuffer',delayRound,keepIf,keepWhen,sampleWhen,switchWhen,keepWhenI,switchSample,keepThen,filter,filterMap,filterFold,fairMerge,combine,mapMany,applyMany) where
+module Signal.Extra((~>),zip,zip3,zip4,unzip,unzip3,unzip4,foldp',foldps,foldps',runBuffer,runBuffer',delayRound,keepIf,keepWhen,sampleWhen,switchWhen,keepWhenI,switchSample,keepThen,filter,filterFold,fairMerge,combine,mapMany,applyMany) where
 {-| Utility functions that aren't in the `Signal` module from
 `elm-lang/core`. 
 
@@ -128,7 +128,7 @@ foldps' f iF aS = fst <~ foldp' (\a (_,s) -> f a s) iF aS
 
 {-| Not sure if this is useful for people, but it's a convenient building block:
 
-    foldps == foldpWith id
+    foldps == foldpWith identity
     foldp f b ==
       let d a = (a,a)
       in foldpWith d f (d b)
@@ -262,7 +262,7 @@ keepWhenI fs s =
 {-| Filter a signal of optional values, discarding `Nothing`s.
 -}
 filter : a -> Signal (Maybe a) -> Signal a
-filter initial = filterMap id initial
+filter initial = filterMap identity initial
 
 
 {-| Apply a fold that may fail, ignore any non-changes. 

@@ -22,7 +22,7 @@ Reacting on events, to be used in `Signal.sampleOn` or
 `Signal.Stream`
 ----------------
 Uninitialised signals. Forward-compatible with plans made to add this to core,
-but only for as far as is definable in Elm 0.15.
+and basically based on API and docs by Evan.
 
 `Signal.Alt`
 ------------

@@ -1,7 +1,7 @@
-module Signal.Stream(Stream, map, fairMerge, merge, mergeMany, fold, filterMap, filter, sample, never, timestamp, toSignal, fromSignal) where
+module Signal.Stream(Stream, map, fairMerge, merge, mergeMany, fold, filterMap, filter, keepIf, sample, never, timestamp, toSignal, fromSignal) where
 
 {-| Uninitialised signals, that only give updates and don't have the concept of
-a current value. Like `Signal.Event.EventStream`, only with values. 
+a current value. Like `Signal.Event.EventStream` (also in this package), only with values. 
 
 Streams of events. Many interactions with the world can be formulated as
 a stream of discrete events: mouse clicks, responses from servers, key presses,
