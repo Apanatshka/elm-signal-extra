@@ -66,14 +66,18 @@ map : (a -> b) -> Stream a -> Stream b
 map f =
   Signal.map (Maybe.map f)
 
-{-| Apply a function to events as they come in. This lets you transform
-streams.
+{-| Convert a stream of values into a signal that updates whenever an event
+comes in on the stream.
 
-    type Action = MouseClick | TimeDelta Float
+    url : Signal String
 
-    actions : Stream Action
-    actions =
-        map (always MouseClick) Mouse.clicks
+    url =
+        toSignal "waiting.gif" imageStream
+
+    constant : a -> Signal a
+
+    constant value =
+        toSignal value Stream.never
 -}
 toSignal : a -> Stream a -> Signal a
 toSignal a str =
