@@ -3,9 +3,8 @@ module Signal.Stream(Stream, map, fairMerge, merge, mergeMany, fold, filterMap, 
 {-| Uninitialised signals, that only give updates and don't have the concept of
 a current value. Like `Signal.Event.EventStream` (also in this package), only with values. 
 
-Streams of events. Many interactions with the world can be formulated as
-a stream of discrete events: mouse clicks, responses from servers, key presses,
-etc.
+@docs Stream
+
 This library provides the basic building blocks for routing these streams of
 events to your application logic.
 
@@ -34,6 +33,10 @@ import Signal.Time as SignalT exposing (Time)
 import Maybe exposing (Maybe(..))
 import Debug
 
+{-| Streams of events. Many interactions with the world can be formulated as
+a stream of discrete events: mouse clicks, responses from servers, key presses,
+etc.
+-}
 type alias Stream a = Signal (Maybe a)
 
 -- Helper function, unsafe because 
@@ -192,6 +195,8 @@ filterMap : (a -> Maybe b) -> Stream a -> Stream b
 filterMap f =
   map f >> filter
 
+{-| Filter out and unwrap the `Just`s in the stream.
+-}
 filter : Stream (Maybe a) -> Stream a
 filter str = SignalE.filter Nothing str
 

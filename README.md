@@ -21,10 +21,14 @@ Reacting on events, to be used in `Signal.sampleOn` or
 
 `Signal.Stream`
 ----------------
-Uninitialised signals. Forward-compatible with plans made to add this to core,
-and basically based on API and docs by Evan.
+Uninitialised signals. Forward-compatible with plans made to add this to
+core, and basically based on API and docs by Evan.
+
+`Signal.Fun`
+------------
+Utility functions for signals of functions. 
 
 `Signal.Alt`
 ------------
 Alternative signal API based on different primitives. Planned, but I
-make no promises
+make no promises.

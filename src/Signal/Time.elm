@@ -1,4 +1,13 @@
-module Signal.Time(Time, limitRate, dropWithin, settledAfter, startTime, relativeTime, since, delay, timestamp) where
+module Signal.Time
+  ( Time
+  , limitRate
+  , dropWithin
+  , settledAfter
+  , startTime
+  , relativeTime
+  , since
+  , delay
+  , timestamp) where
 {-| Time related functions for `Signal`s.
 
 # Easy does it
@@ -10,7 +19,7 @@ Controlling too frequently changing signals.
 
 # Re-exports
 Some functions from the `Time` module that fit in. 
-@docs since, delay, timestamp
+@docs Time, since, delay, timestamp
 -}
 
 import Signal exposing (Signal, (<~), (~))
@@ -18,6 +27,8 @@ import Signal.Extra exposing ((~>))
 import Signal.Discrete as Discrete
 import Time
 
+{-| Just re-exporting the `Time` type from the `Time` module
+-}
 type alias Time = Time.Time
 
 {-| Keep only the timestamps

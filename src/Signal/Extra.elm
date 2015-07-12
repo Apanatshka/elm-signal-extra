@@ -1,4 +1,30 @@
-module Signal.Extra((~>),zip,zip3,zip4,unzip,unzip3,unzip4,foldp',foldps,foldps',runBuffer,runBuffer',delayRound,keepIf,keepWhen,sampleWhen,switchWhen,keepWhenI,switchSample,keepThen,filter,filterFold,fairMerge,combine,mapMany,applyMany) where
+module Signal.Extra
+  ( (~>)
+  , zip
+  , zip3
+  , zip4
+  , unzip
+  , unzip3
+  , unzip4
+  , foldp'
+  , foldps
+  , foldps'
+  , runBuffer
+  , runBuffer'
+  , delayRound
+  , keepIf
+  , keepWhen
+  , sampleWhen
+  , switchWhen
+  , keepWhenI
+  , switchSample
+  , keepThen
+  , filter
+  , filterFold
+  , fairMerge
+  , combine
+  , mapMany
+  , applyMany) where
 {-| Utility functions that aren't in the `Signal` module from
 `elm-lang/core`. 
 
@@ -16,7 +42,7 @@ For those too lazy to write a record or union type.
 @docs switchWhen,switchSample
 
 # Filters
-@docs keepIf,keepWhen,sampleWhen,keepThen,keepWhenI,filter,filterMap
+@docs keepIf,keepWhen,sampleWhen,keepThen,keepWhenI,filter,filterFold
 
 # Combining
 @docs fairMerge, combine, mapMany, applyMany

@@ -1,5 +1,5 @@
 {
-    "version": "5.1.1",
+    "version": "5.2.0",
     "summary": "Signal-related, advanced and convenience functions",
     "repository": "https://github.com/Apanatshka/elm-signal-extra.git",
     "license": "MIT",
@@ -10,7 +10,8 @@
         "Signal.Time",
         "Signal.Extra",
         "Signal.Discrete",
-        "Signal.Stream"
+        "Signal.Stream",
+        "Signal.Fun"
     ],
     "dependencies": {
         "elm-lang/core": "2.0.0 <= v < 3.0.0"
