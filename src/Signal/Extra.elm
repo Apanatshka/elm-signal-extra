@@ -24,7 +24,10 @@ module Signal.Extra
   , fairMerge
   , combine
   , mapMany
-  , applyMany) where
+  , applyMany
+  , mapSample
+  , withSample
+  ) where
 {-| Utility functions that aren't in the `Signal` module from
 `elm-lang/core`. 
 
@@ -45,7 +48,7 @@ For those too lazy to write a record or union type.
 @docs keepIf,keepWhen,sampleWhen,keepThen,keepWhenI,filter,filterFold
 
 # Combining
-@docs fairMerge, combine, mapMany, applyMany
+@docs fairMerge, combine, mapMany, applyMany, mapSample, withSample
 -}
 
 import Signal exposing (map,map2,map3,map4,(<~),(~),sampleOn,constant,foldp,merge,dropRepeats,filterMap)
@@ -366,3 +369,56 @@ The result is reevaluated whenever any signal changes.
 applyMany : Signal (List a -> b) -> List (Signal a) -> Signal b
 applyMany fs l =
   fs ~ combine l
+
+
+{-| Apply a function to the current value of two signals. The function is
+re-evaluated only when the first Signal changes -- at which time the current
+value of the second Signal is sampled.
+
+This is equivalent to Signal.map2, except that Signal.map2 re-evaluatess the
+function when either Signal changes.
+-}
+mapSample : (a -> b -> result) -> Signal a -> Signal b -> Signal result
+mapSample func a =
+  Signal.map2 func a << Signal.sampleOn a
+
+
+{-| Intended to be paired with Signal's `(<~)` operator, `withSample` makes it
+possible for many signals to be sampled by a mapping function. For example, the
+following two declarations are equivalent:
+
+    main : Signal Element
+    main =
+      scene <~ Mouse.position `withSample` Window.dimensions
+
+    main : Signal Element
+    main =
+      mapSample scene Mouse.position Window.dimensions
+
+You can use this pattern to sample as many signals as you want, by using
+`withSample` many times.
+
+The function will only be re-evaluated when the Signal mapped with `(<~)`
+changes. This is unlike the (otherwise equivalent) Signal `(~)` operator, since
+that operator re-evaluates the function whenever any of the input Signals change.
+
+If you want the function to be re-evaluated when some signals change but not
+others, then you can combine the Signal `(~)` operator and `withSample`, putting
+`(~)` first. For instance:
+
+    main : Signal Element
+    main =
+        scene <~ Mouse.position ~ Window.dimensions `withSample` anotherSignal
+
+In this example, the `scene` function will take three parameters, and will be called
+whenever either of the first two parameters changes. The third parameter will
+be the value of `anotherSignal`, but changes to `anotherSignal` will not cause
+the function to be re-evaluated.
+-}
+withSample : Signal (a -> b) -> Signal a -> Signal b
+withSample =
+  mapSample ((<|))
+
+
+-- Give `withSample` the same precedence as (~) so that it composes well
+infixl 4 `withSample`
