@@ -417,7 +417,7 @@ the function to be re-evaluated.
 -}
 withSample : Signal (a -> b) -> Signal a -> Signal b
 withSample =
-  mapSample ((<|))
+  mapSample (<|)
 
 
 -- Give `withSample` the same precedence as (~) so that it composes well

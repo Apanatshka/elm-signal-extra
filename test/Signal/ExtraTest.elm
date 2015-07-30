@@ -54,13 +54,12 @@ mapSampleOnlyFiresOnSignalA =
 -- And herewith the stimulation
 mapSampleOnlyFiresOnSignalAStimulus : Task () ()
 mapSampleOnlyFiresOnSignalAStimulus =
-    (ignore <| sequence <|
+    ignore <| sequence <|
         List.map (\int ->
             send signal1.address int
             `Task.andThen`
             always (send signal2.address int)
         ) [1 .. 5]
-    )
 
 
 signal3 = mailbox 0
