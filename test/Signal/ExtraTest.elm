@@ -32,8 +32,8 @@ signalToSample = mailbox 0
 
 sampleTest : Task x Test
 sampleTest =
-    (send signalToSample.address 5)
-    `andThen` always (sample signalToSample.signal)
+    send signalToSample.address 5
+    >>- sample signalToSample.signal
     >>> assertEqual 5 >> test "should sample value"
 
 
