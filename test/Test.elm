@@ -17,22 +17,26 @@ import Signal.Extra exposing (mapMany)
 -- that, a Signal of Tests.
 main : Signal Element
 main =
-    Signal.map runDisplay tests
+    Signal.map runDisplay tests.signal
 
 
--- Note that the manMany is to permit additional tests to be defined
--- easily ...  that is, you can add to the list
-tests : Signal Test
+tests : Mailbox Test
 tests =
-    mapMany
+    mailbox <|
+        test
+            "elm-signal-tests: initial state"
+            (assert False)
+
+
+-- Note that the sequence is to permit additional tests to be defined
+-- easily ...  that is, you can add to the list
+port tasks : Task x ()
+port tasks =
+    Task.map
         (suite "elm-signal-extra tests")
+        (sequence
             [ Signal.ExtraTest.tests
             ]
+        )
+    `andThen` send tests.address
 
-
--- As above, the sequence is to permit additional tasks to be defined.
-port tasks : Task () (List ())
-port tasks =
-    sequence
-        [ Signal.ExtraTest.tasks
-        ]

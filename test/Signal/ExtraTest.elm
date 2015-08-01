@@ -5,6 +5,36 @@ import Task exposing (Task, sequence, andThen)
 import Signal.Extra exposing (passiveMap2, withPassive, mapMany)
 import ElmTest.Test exposing (..)
 import ElmTest.Assertion exposing (..)
+import Native.ApanatshkaSignalExtra
+
+
+-- A convenience for the testing DSL ... see use below ...
+-- lets you do some andThens and then map last
+(>>>) =
+    flip Task.map
+
+-- Basically, an `andThen` which ignores its argument
+(>>-) task func =
+    task `andThen` (always func)
+
+
+infixl 4 >>>
+infixl 4 >>-
+
+
+{-| Construct a task which, when performed, will return the current value of a Signal. -}
+sample : Signal a -> Task x a
+sample =
+    Native.ApanatshkaSignalExtra.sample
+
+
+signalToSample = mailbox 0
+
+sampleTest : Task x Test
+sampleTest =
+    (send signalToSample.address 5)
+    `andThen` always (sample signalToSample.signal)
+    >>> assertEqual 5 >> test "should sample value"
 
 
 -- Some mapping functions
@@ -18,24 +48,18 @@ consume4 a b c d =
     [a, b, c, d]
 
 
--- A convenience to make task types converge
-ignore : Task x a -> Task () ()
-ignore =
-    Task.map (always ()) << Task.mapError (always ())
-
-
 signal1 = mailbox 0
 signal2 = mailbox 0
 
--- We're testing the behaviour of a Signal, and once you get
--- into Signal-world there is no way out -- you can only create
--- another Signal with a transformed type.  So, we're necessarily
--- creating a Signal of Tests, by mapping the Signal into a Test.
--- Then, we just need to stimulate the Signals in a way which will,
--- eventually, make the tests pass. That is, without the stimulation,
--- the tests will initially fail, but with the stimulation the tests
--- will eventually pass.
-passiveMap2OnlyFiresOnSignalA : Signal Test
+-- We're testing the behaviour of a Signal, which is a little tricky,
+-- since you want to make updates to the Signal and then see what
+-- happens. 'Making updates to the signal' is essentially a matter
+-- for Tasks -- that is, you stimulate a Signal via a Task. You can
+-- then use the `sample` function above to get the value of a Signal,
+-- and then use that to construct a test. So you end up with a Task
+-- that eventually produces a Test. Once you've got that, you just
+-- need to bundle them together and 'run' them.
+passiveMap2OnlyFiresOnSignalA : Task x Test
 passiveMap2OnlyFiresOnSignalA =
     let
         signal =
@@ -44,46 +68,31 @@ passiveMap2OnlyFiresOnSignalA =
         counter =
             foldp (\_ s -> s + 1) 0 signal
 
-        testify =
-            assertEqual 5 >> test "passiveMap2 fires only for first signal"
-
     in
-        Signal.map testify counter
-
-
--- And herewith the stimulation
-passiveMap2OnlyFiresOnSignalAStimulus : Task () ()
-passiveMap2OnlyFiresOnSignalAStimulus =
-    ignore <| sequence <|
-        List.map (\int ->
-            send signal1.address int
-            `Task.andThen`
-            always (send signal2.address int)
-        ) [1 .. 5]
+        sequence (
+            List.map (\int ->
+                send signal1.address int
+                >>- send signal2.address int
+            ) [1 .. 5]
+        )
+        >>- sample counter
+        >>> assertEqual 5 >> test "passiveMap2 fires only for first signal"
 
 
 signal3 = mailbox 0
 signal4 = mailbox 0
 
-passiveMap2ActuallySamples : Signal Test
+passiveMap2ActuallySamples : Task x Test
 passiveMap2ActuallySamples =
     let
         signal =
             passiveMap2 consume2 signal3.signal signal4.signal
 
-        testify =
-            assertEqual [26, 25] >> test "passiveMap2 actually samples"
-
     in
-        Signal.map testify signal
-
-
-passiveMap2ActuallySamplesStimulus : Task () ()
-passiveMap2ActuallySamplesStimulus =
-    ignore <|
         send signal4.address 25
-        `Task.andThen`
-        always (send signal3.address 26)
+        >>- send signal3.address 26
+        >>- sample signal
+        >>> assertEqual [26, 25] >> test "passiveMap2 actually samples"
 
 
 signal5 = mailbox 0
@@ -91,7 +100,7 @@ signal6 = mailbox 0
 signal7 = mailbox 0
 signal8 = mailbox 0
 
-complicatedMappingFiresCorrectly : Signal Test
+complicatedMappingFiresCorrectly : Task x Test
 complicatedMappingFiresCorrectly =
     let
         signal =
@@ -104,26 +113,17 @@ complicatedMappingFiresCorrectly =
         counter =
             foldp (\_ s -> s + 1) 0 signal
 
-        testify =
-            assertEqual 10 >> test "complicated signal fires only for first two signals"
-
     in
-        Signal.map testify counter
-
-
-complicatedMappingFiresCorrectlyStimulus : Task () ()
-complicatedMappingFiresCorrectlyStimulus =
-    (ignore <| sequence <|
-        List.map (\int ->
-            send signal5.address int
-            `Task.andThen`
-            always (send signal6.address int)
-            `Task.andThen`
-            always (send signal7.address int)
-            `Task.andThen`
-            always (send signal8.address int)
-        ) [1 .. 5]
-    )
+        sequence (
+            List.map (\int ->
+                send signal5.address int
+                >>- send signal6.address int
+                >>- send signal7.address int
+                >>- send signal8.address int
+            ) [1 .. 5]
+        )
+        >>- sample counter
+        >>> assertEqual 10 >> test "complicated signal fires only for first two signals"
 
 
 signal9 = mailbox 0
@@ -131,7 +131,7 @@ signal10 = mailbox 0
 signal11 = mailbox 0
 signal12 = mailbox 0
 
-complicatedMappingActuallySamples : Signal Test
+complicatedMappingActuallySamples : Task x Test
 complicatedMappingActuallySamples =
     let
         signal =
@@ -141,41 +141,22 @@ complicatedMappingActuallySamples =
                 `withPassive` signal11.signal
                 `withPassive` signal12.signal
 
-        testify =
-            assertEqual [29, 28, 27, 26] >> test "passiveMap2 actually samples"
-
     in
-        Signal.map testify signal
-
-
-complicatedMappingActuallySamplesStimulus : Task () ()
-complicatedMappingActuallySamplesStimulus =
-    ignore <|
         send signal12.address 26
-        `Task.andThen`
-        always (send signal11.address 27)
-        `Task.andThen`
-        always (send signal10.address 28)
-        `Task.andThen`
-        always (send signal9.address 29)
+        >>- send signal11.address 27
+        >>- send signal10.address 28
+        >>- send signal9.address 29
+        >>- sample signal
+        >>> assertEqual [29, 28, 27, 26] >> test "passiveMap2 actually samples"
 
 
-tests : Signal Test
+tests : Task x Test
 tests =
-    mapMany
-        (suite "Signal.Extra tests")
-            [ passiveMap2OnlyFiresOnSignalA
-            , passiveMap2ActuallySamples
-            , complicatedMappingFiresCorrectly
-            , complicatedMappingActuallySamples
-            ]
-
-
-tasks : Task () ()
-tasks =
-    ignore <| sequence <|
-        [ passiveMap2OnlyFiresOnSignalAStimulus
-        , passiveMap2ActuallySamplesStimulus
-        , complicatedMappingFiresCorrectlyStimulus
-        , complicatedMappingActuallySamplesStimulus
+    sequence
+        [ sampleTest
+        , passiveMap2OnlyFiresOnSignalA
+        , passiveMap2ActuallySamples
+        , complicatedMappingFiresCorrectly
+        , complicatedMappingActuallySamples
         ]
+    >>> suite "Signal.Extra tests"
