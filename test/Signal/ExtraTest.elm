@@ -2,7 +2,7 @@ module Signal.ExtraTest where
 
 import Signal exposing (Mailbox, mailbox, send, foldp, sampleOn, (~), (<~))
 import Task exposing (Task, sequence, andThen)
-import Signal.Extra exposing (lazyMap, withLazy, mapMany)
+import Signal.Extra exposing (passiveMap2, withPassive, mapMany)
 import ElmTest.Test exposing (..)
 import ElmTest.Assertion exposing (..)
 
@@ -35,25 +35,25 @@ signal2 = mailbox 0
 -- eventually, make the tests pass. That is, without the stimulation,
 -- the tests will initially fail, but with the stimulation the tests
 -- will eventually pass.
-lazyMapOnlyFiresOnSignalA : Signal Test
-lazyMapOnlyFiresOnSignalA =
+passiveMap2OnlyFiresOnSignalA : Signal Test
+passiveMap2OnlyFiresOnSignalA =
     let
         signal =
-            lazyMap consume2 signal1.signal signal2.signal
+            passiveMap2 consume2 signal1.signal signal2.signal
 
         counter =
             foldp (\_ s -> s + 1) 0 signal
 
         testify =
-            assertEqual 5 >> test "lazyMap fires only for first signal"
+            assertEqual 5 >> test "passiveMap2 fires only for first signal"
 
     in
         Signal.map testify counter
 
 
 -- And herewith the stimulation
-lazyMapOnlyFiresOnSignalAStimulus : Task () ()
-lazyMapOnlyFiresOnSignalAStimulus =
+passiveMap2OnlyFiresOnSignalAStimulus : Task () ()
+passiveMap2OnlyFiresOnSignalAStimulus =
     ignore <| sequence <|
         List.map (\int ->
             send signal1.address int
@@ -65,21 +65,21 @@ lazyMapOnlyFiresOnSignalAStimulus =
 signal3 = mailbox 0
 signal4 = mailbox 0
 
-lazyMapActuallySamples : Signal Test
-lazyMapActuallySamples =
+passiveMap2ActuallySamples : Signal Test
+passiveMap2ActuallySamples =
     let
         signal =
-            lazyMap consume2 signal3.signal signal4.signal
+            passiveMap2 consume2 signal3.signal signal4.signal
 
         testify =
-            assertEqual [26, 25] >> test "lazyMap actually samples"
+            assertEqual [26, 25] >> test "passiveMap2 actually samples"
 
     in
         Signal.map testify signal
 
 
-lazyMapActuallySamplesStimulus : Task () ()
-lazyMapActuallySamplesStimulus =
+passiveMap2ActuallySamplesStimulus : Task () ()
+passiveMap2ActuallySamplesStimulus =
     ignore <|
         send signal4.address 25
         `Task.andThen`
@@ -98,8 +98,8 @@ complicatedMappingFiresCorrectly =
             consume4
                 <~ signal5.signal
                 ~ signal6.signal
-                `withLazy` signal7.signal
-                `withLazy` signal8.signal
+                `withPassive` signal7.signal
+                `withPassive` signal8.signal
 
         counter =
             foldp (\_ s -> s + 1) 0 signal
@@ -138,11 +138,11 @@ complicatedMappingActuallySamples =
             consume4
                 <~ signal9.signal
                 ~ signal10.signal
-                `withLazy` signal11.signal
-                `withLazy` signal12.signal
+                `withPassive` signal11.signal
+                `withPassive` signal12.signal
 
         testify =
-            assertEqual [29, 28, 27, 26] >> test "lazyMap actually samples"
+            assertEqual [29, 28, 27, 26] >> test "passiveMap2 actually samples"
 
     in
         Signal.map testify signal
@@ -164,8 +164,8 @@ tests : Signal Test
 tests =
     mapMany
         (suite "Signal.Extra tests")
-            [ lazyMapOnlyFiresOnSignalA
-            , lazyMapActuallySamples
+            [ passiveMap2OnlyFiresOnSignalA
+            , passiveMap2ActuallySamples
             , complicatedMappingFiresCorrectly
             , complicatedMappingActuallySamples
             ]
@@ -174,8 +174,8 @@ tests =
 tasks : Task () ()
 tasks =
     ignore <| sequence <|
-        [ lazyMapOnlyFiresOnSignalAStimulus
-        , lazyMapActuallySamplesStimulus
+        [ passiveMap2OnlyFiresOnSignalAStimulus
+        , passiveMap2ActuallySamplesStimulus
         , complicatedMappingFiresCorrectlyStimulus
         , complicatedMappingActuallySamplesStimulus
         ]
