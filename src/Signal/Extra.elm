@@ -24,7 +24,10 @@ module Signal.Extra
   , fairMerge
   , combine
   , mapMany
-  , applyMany) where
+  , applyMany
+  , passiveMap2
+  , withPassive
+  ) where
 {-| Utility functions that aren't in the `Signal` module from
 `elm-lang/core`. 
 
@@ -45,7 +48,7 @@ For those too lazy to write a record or union type.
 @docs keepIf,keepWhen,sampleWhen,keepThen,keepWhenI,filter,filterFold
 
 # Combining
-@docs fairMerge, combine, mapMany, applyMany
+@docs fairMerge, combine, mapMany, applyMany, passiveMap2, withPassive
 -}
 
 import Signal exposing (map,map2,map3,map4,(<~),(~),sampleOn,constant,foldp,merge,dropRepeats,filterMap)
@@ -366,3 +369,57 @@ The result is reevaluated whenever any signal changes.
 applyMany : Signal (List a -> b) -> List (Signal a) -> Signal b
 applyMany fs l =
   fs ~ combine l
+
+
+{-| Apply a function to the current value of two signals. The second signal is
+mapped passively -- that is, changes to the second signal do not force the
+function to re-evaluate. However, when the first signal changes, the function
+is re-evaluated with the current value of both signals.
+
+This is equivalent to Signal.map2, except that Signal.map2 re-evaluatess the
+function when either Signal changes.
+-}
+passiveMap2 : (a -> b -> result) -> Signal a -> Signal b -> Signal result
+passiveMap2 func a =
+  Signal.map2 func a << Signal.sampleOn a
+
+
+{-| Intended to be paired with Signal's `(<~)` operator, `withPassive` makes it
+possible for many signals to be passively mapped. For example, the
+following two declarations are equivalent:
+
+    main : Signal Element
+    main =
+      scene <~ Mouse.position `withPassive` Window.dimensions
+
+    main : Signal Element
+    main =
+      passiveMap2 scene Mouse.position Window.dimensions
+
+You can use this pattern to passively map as many signals as you want, by using
+`withPassive` many times.
+
+The function will only be re-evaluated when the signal mapped with `(<~)`
+changes. This is unlike the (otherwise equivalent) Signal `(~)` operator, since
+that operator re-evaluates the function whenever any of the input signals change.
+
+If you want the function to be re-evaluated when some signals change but not
+others, then you can combine the Signal `(~)` operator and `withPassive`, putting
+`(~)` first. For instance:
+
+    main : Signal Element
+    main =
+        scene <~ Mouse.position ~ Window.dimensions `withPassive` anotherSignal
+
+In this example, the `scene` function will take three parameters, and will be called
+whenever either of the first two parameters changes. The third parameter will
+be the value of `anotherSignal`, but changes to `anotherSignal` will not cause
+the function to be re-evaluated.
+-}
+withPassive : Signal (a -> b) -> Signal a -> Signal b
+withPassive =
+  passiveMap2 (<|)
+
+
+-- Give `withPassive` the same precedence as (~) so that it composes well
+infixl 4 `withPassive`

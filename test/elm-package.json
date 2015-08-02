@@ -1,0 +1,18 @@
+{
+    "version": "5.2.1",
+    "summary": "Tests for elm-signal-extra",
+    "repository": "https://github.com/Apanatshka/elm-signal-extra.git",
+    "license": "MIT",
+    "source-directories": [
+        ".",
+        "../src"
+    ],
+    "exposed-modules": [
+    ],
+    "native-modules": true,
+    "dependencies": {
+        "elm-lang/core": "2.0.0 <= v < 3.0.0",
+        "deadfoxygrandpa/Elm-Test": "1.0.4 <= v < 2.0.0"
+    },
+    "elm-version": "0.15.0 <= v < 0.16.0"
+}
