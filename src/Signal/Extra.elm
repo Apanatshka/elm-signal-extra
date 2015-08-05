@@ -71,7 +71,7 @@ infixl 4 ~>
 provides a more attractive way to combine several signals together into a
  data type than `map2`, `map3`, etc.
 
-Equivalent to [Signal's ~ operator](http://package.elm-lang.org/packages/elm-lang/core/2.1.0/Signal#~).
+Equivalent to [Signal's ~ operator](http://package.elm-lang.org/packages/elm-lang/core/latest/Signal#~).
 
     type alias User =
         { name : String
