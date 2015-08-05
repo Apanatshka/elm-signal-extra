@@ -85,7 +85,7 @@ provides a more attractive way to combine several signals together into a
 -}
 andMap : Signal (a -> b) -> Signal a -> Signal b
 andMap =
-  map2 (\fn i -> fn i)
+  (~)
 
 
 {-| Zip two signals into a signal of pairs.
