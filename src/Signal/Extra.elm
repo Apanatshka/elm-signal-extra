@@ -35,6 +35,9 @@ module Signal.Extra
 # Flipped fancy map
 @docs (~>)
 
+# Mapping
+@docs andMap
+
 # Zipping and unzipping
 For those too lazy to write a record or union type.  
 @docs zip, zip3, zip4, unzip, unzip3, unzip4
