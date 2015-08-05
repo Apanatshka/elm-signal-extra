@@ -1,5 +1,6 @@
 module Signal.Extra
   ( (~>)
+  , andMap
   , zip
   , zip3
   , zip4
@@ -66,8 +67,23 @@ two!
 
 infixl 4 ~>
 
+{-| Apply a Signal of functions to another signal. Like `Task.andMap`, this
+provides a more attractive way to combine several signals together into a
+ data type than `map2`, `map3`, etc.
 
-{-| Zip two signals into a signal of pairs. 
+    type alias User = { name : String, age : Int, numberOfPosts : Int }
+
+    userSignal : Signal User
+    userSignal = user
+        `map` nameSignal
+        `andMap` ageSignal
+        `andMap` numberOfPostsSignal
+-}
+andMap : Signal (a -> b) -> Signal a -> Signal b
+andMap fnSignal = map2 (\fn i -> fn i) fnSignal
+
+
+{-| Zip two signals into a signal of pairs.
 
     zip Mouse.x Mouse.y == Mouse.position
 -}
