@@ -79,7 +79,7 @@ provides a more attractive way to combine several signals together into a
 
     userSignal : Signal User
     userSignal = user
-        `map` nameSignal
+        `Signal.map` nameSignal
         `andMap` ageSignal
         `andMap` numberOfPostsSignal
 -}
