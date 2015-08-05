@@ -71,7 +71,11 @@ infixl 4 ~>
 provides a more attractive way to combine several signals together into a
  data type than `map2`, `map3`, etc.
 
-    type alias User = { name : String, age : Int, numberOfPosts : Int }
+    type alias User =
+        { name : String
+        , age : Int
+        , numberOfPosts : Int
+        }
 
     userSignal : Signal User
     userSignal = user
@@ -80,7 +84,8 @@ provides a more attractive way to combine several signals together into a
         `andMap` numberOfPostsSignal
 -}
 andMap : Signal (a -> b) -> Signal a -> Signal b
-andMap fnSignal = map2 (\fn i -> fn i) fnSignal
+andMap =
+  map2 (\fn i -> fn i)
 
 
 {-| Zip two signals into a signal of pairs.
