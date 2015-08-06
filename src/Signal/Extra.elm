@@ -68,8 +68,8 @@ two!
 infixl 4 ~>
 
 {-| Apply a Signal of functions to another signal. Like `Task.andMap`, this
-provides a more attractive way to combine several signals together into a
- data type than `map2`, `map3`, etc.
+provides a way to combine several signals together into a data type that's
+easier to extend than `map2`, `map3`, etc.
 
 Equivalent to [Signal's ~ operator](http://package.elm-lang.org/packages/elm-lang/core/latest/Signal#~).
 
