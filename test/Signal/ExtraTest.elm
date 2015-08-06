@@ -175,8 +175,8 @@ andMapAppliesSignalFunctionToSignal =
 signal15 = mailbox ((+) 10)
 signal16 = mailbox 0
 
-andMapAppliesFnIfItUpdates : Task x Test
-andMapAppliesFnIfItUpdates =
+andMapAppliesFunctionIfItUpdates : Task x Test
+andMapAppliesFunctionIfItUpdates =
   let
       signal =
           signal15.signal
@@ -191,8 +191,8 @@ andMapAppliesFnIfItUpdates =
 signal17 = mailbox ((+) 10)
 signal18 = mailbox 0
 
-andMapAppliesFnIfValueSignalUpdates : Task x Test
-andMapAppliesFnIfValueSignalUpdates =
+andMapAppliesFunctionIfValueSignalUpdates : Task x Test
+andMapAppliesFunctionIfValueSignalUpdates =
   let
       signal =
           signal17.signal
@@ -214,7 +214,7 @@ tests =
         , complicatedMappingFiresCorrectly
         , complicatedMappingActuallySamples
         , andMapAppliesSignalFunctionToSignal
-        , andMapAppliesFnIfItUpdates
-        , andMapAppliesFnIfValueSignalUpdates
+        , andMapAppliesFunctionIfItUpdates
+        , andMapAppliesFunctionIfValueSignalUpdates
         ]
     >>> suite "Signal.Extra tests"
