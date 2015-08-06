@@ -30,16 +30,13 @@ module Signal.Extra
   , withPassive
   ) where
 {-| Utility functions that aren't in the `Signal` module from
-`elm-lang/core`. 
-
-# Flipped fancy map
-@docs (~>)
+`elm-lang/core`.
 
 # Mapping
-@docs andMap
+@docs (~>), andMap
 
 # Zipping and unzipping
-For those too lazy to write a record or union type.  
+For those too lazy to write a record or union type.
 @docs zip, zip3, zip4, unzip, unzip3, unzip4
 
 # Stateful
