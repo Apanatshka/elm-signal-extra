@@ -149,6 +149,7 @@ complicatedMappingActuallySamples =
         >>- sample signal
         >>> assertEqual [29, 28, 27, 26] >> test "passiveMap2 actually samples"
 
+
 type alias User =
     { name : String
     , age : Int
@@ -170,6 +171,40 @@ andMapAppliesSignalFunctionToSignal =
         >>> assertEqual { name = "Bobby", age = 5 }
         >> test "andMap applies fn in first signal to result of second signal"
 
+
+signal15 = mailbox ((+) 10)
+signal16 = mailbox 0
+
+andMapAppliesFnIfItUpdates : Task x Test
+andMapAppliesFnIfItUpdates =
+  let
+      signal =
+          signal15.signal
+          `andMap` signal16.signal
+  in
+    send signal15.address ((+) 20)
+    >>- sample signal
+    >>> assertEqual 20
+    >> test "andMap applies fn in first signal whenever it changes"
+
+
+signal17 = mailbox ((+) 10)
+signal18 = mailbox 0
+
+andMapAppliesFnIfValueSignalUpdates : Task x Test
+andMapAppliesFnIfValueSignalUpdates =
+  let
+      signal =
+          signal17.signal
+          `andMap` signal18.signal
+  in
+    send signal18.address 10
+    >>- sample signal
+    >>> assertEqual 20
+    >> test "andMap applies fn in first signal to the value of the second when it changes"
+
+
+
 tests : Task x Test
 tests =
     sequence
@@ -179,5 +214,7 @@ tests =
         , complicatedMappingFiresCorrectly
         , complicatedMappingActuallySamples
         , andMapAppliesSignalFunctionToSignal
+        , andMapAppliesFnIfItUpdates
+        , andMapAppliesFnIfValueSignalUpdates
         ]
     >>> suite "Signal.Extra tests"
