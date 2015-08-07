@@ -2,7 +2,7 @@ module Signal.ExtraTest where
 
 import Signal exposing (Mailbox, mailbox, send, foldp, sampleOn, (~), (<~))
 import Task exposing (Task, sequence, andThen)
-import Signal.Extra exposing (passiveMap2, withPassive, mapMany)
+import Signal.Extra exposing (passiveMap2, withPassive, mapMany, andMap)
 import ElmTest.Test exposing (..)
 import ElmTest.Assertion exposing (..)
 import Native.ApanatshkaSignalExtra
@@ -150,6 +150,61 @@ complicatedMappingActuallySamples =
         >>> assertEqual [29, 28, 27, 26] >> test "passiveMap2 actually samples"
 
 
+type alias User =
+    { name : String
+    , age : Int
+    }
+
+signal13 = mailbox ""
+signal14 = mailbox 0
+
+andMapAppliesSignalFunctionToSignal : Task x Test
+andMapAppliesSignalFunctionToSignal =
+    let
+        signal = User
+            `Signal.map` signal13.signal
+            `andMap` signal14.signal
+    in
+        send signal13.address "Bobby"
+        >>- send signal14.address 5
+        >>- sample signal
+        >>> assertEqual { name = "Bobby", age = 5 }
+        >> test "andMap applies fn in first signal to result of second signal"
+
+
+signal15 = mailbox ((+) 10)
+signal16 = mailbox 0
+
+andMapAppliesFunctionIfItUpdates : Task x Test
+andMapAppliesFunctionIfItUpdates =
+  let
+      signal =
+          signal15.signal
+          `andMap` signal16.signal
+  in
+    send signal15.address ((+) 20)
+    >>- sample signal
+    >>> assertEqual 20
+    >> test "andMap applies fn in first signal whenever it changes"
+
+
+signal17 = mailbox ((+) 10)
+signal18 = mailbox 0
+
+andMapAppliesFunctionIfValueSignalUpdates : Task x Test
+andMapAppliesFunctionIfValueSignalUpdates =
+  let
+      signal =
+          signal17.signal
+          `andMap` signal18.signal
+  in
+    send signal18.address 10
+    >>- sample signal
+    >>> assertEqual 20
+    >> test "andMap applies fn in first signal to the value of the second when it changes"
+
+
+
 tests : Task x Test
 tests =
     sequence
@@ -158,5 +213,8 @@ tests =
         , passiveMap2ActuallySamples
         , complicatedMappingFiresCorrectly
         , complicatedMappingActuallySamples
+        , andMapAppliesSignalFunctionToSignal
+        , andMapAppliesFunctionIfItUpdates
+        , andMapAppliesFunctionIfValueSignalUpdates
         ]
     >>> suite "Signal.Extra tests"

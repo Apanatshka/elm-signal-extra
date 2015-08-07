@@ -1,5 +1,6 @@
 module Signal.Extra
   ( (~>)
+  , andMap
   , zip
   , zip3
   , zip4
@@ -29,13 +30,13 @@ module Signal.Extra
   , withPassive
   ) where
 {-| Utility functions that aren't in the `Signal` module from
-`elm-lang/core`. 
+`elm-lang/core`.
 
-# Flipped fancy map
-@docs (~>)
+# Mapping
+@docs (~>), andMap
 
 # Zipping and unzipping
-For those too lazy to write a record or union type.  
+For those too lazy to write a record or union type.
 @docs zip, zip3, zip4, unzip, unzip3, unzip4
 
 # Stateful
@@ -66,8 +67,30 @@ two!
 
 infixl 4 ~>
 
+{-| Apply a Signal of functions to another signal. Like `Task.andMap`, this
+provides a way to combine several signals together into a data type that's
+easier to extend than `map2`, `map3`, etc.
 
-{-| Zip two signals into a signal of pairs. 
+Equivalent to [Signal's ~ operator](http://package.elm-lang.org/packages/elm-lang/core/latest/Signal#~).
+
+    type alias User =
+        { name : String
+        , age : Int
+        , numberOfPosts : Int
+        }
+
+    userSignal : Signal User
+    userSignal = user
+        `Signal.map` nameSignal
+        `andMap` ageSignal
+        `andMap` numberOfPostsSignal
+-}
+andMap : Signal (a -> b) -> Signal a -> Signal b
+andMap =
+  (~)
+
+
+{-| Zip two signals into a signal of pairs.
 
     zip Mouse.x Mouse.y == Mouse.position
 -}
