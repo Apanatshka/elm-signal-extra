@@ -80,7 +80,7 @@ Equivalent to [Signal's ~ operator](http://package.elm-lang.org/packages/elm-lan
         }
 
     userSignal : Signal User
-    userSignal = user
+    userSignal = User
         `Signal.map` nameSignal
         `andMap` ageSignal
         `andMap` numberOfPostsSignal
