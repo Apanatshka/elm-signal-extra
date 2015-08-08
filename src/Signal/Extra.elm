@@ -67,7 +67,7 @@ two!
 
 infixl 4 ~>
 
-{-| Apply a Signal of functions to another signal. Like `Task.andMap`, this
+{-| Apply a signal of functions to another signal. Like `Task.andMap`, this
 provides a way to combine several signals together into a data type that's
 easier to extend than `map2`, `map3`, etc.
 
@@ -80,7 +80,7 @@ Equivalent to [Signal's ~ operator](http://package.elm-lang.org/packages/elm-lan
         }
 
     userSignal : Signal User
-    userSignal = user
+    userSignal = User
         `Signal.map` nameSignal
         `andMap` ageSignal
         `andMap` numberOfPostsSignal
