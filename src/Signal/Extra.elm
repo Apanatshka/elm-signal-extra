@@ -399,7 +399,7 @@ mapped passively -- that is, changes to the second signal do not force the
 function to re-evaluate. However, when the first signal changes, the function
 is re-evaluated with the current value of both signals.
 
-This is equivalent to Signal.map2, except that Signal.map2 re-evaluatess the
+This is equivalent to Signal.map2, except that Signal.map2 re-evaluates the
 function when either Signal changes.
 -}
 passiveMap2 : (a -> b -> result) -> Signal a -> Signal b -> Signal result
