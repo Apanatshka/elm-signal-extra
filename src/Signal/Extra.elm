@@ -23,7 +23,7 @@ module Signal.Extra
   , filter
   , filterFold
   , fairMerge
-  , mergeAll
+  , mergeMany
   , combine
   , mapMany
   , applyMany
@@ -50,7 +50,7 @@ For those too lazy to write a record or union type.
 @docs keepIf,keepWhen,sampleWhen,keepThen,keepWhenI,filter,filterFold
 
 # Combining
-@docs fairMerge, mergeAll, combine, mapMany, applyMany, passiveMap2, withPassive
+@docs fairMerge, mergeMany, combine, mapMany, applyMany, passiveMap2, withPassive
 -}
 
 import Signal exposing (map,map2,map3,map4,(<~),(~),sampleOn,constant,foldp,merge,dropRepeats,filterMap)
@@ -363,14 +363,14 @@ like Signal.mergeMany, except that it does not crash when given an empty list.
 
     updates : Signal Update
     updates =
-        mergeAll
+        mergeMany
             (MouseMove Mouse.position)
             [ map TimeDelta (fps 40)
             , map (always Click) Mouse.clicks
             ]
 -}
-mergeAll : Signal a -> List (Signal a) -> Signal a
-mergeAll original others =
+mergeMany : Signal a -> List (Signal a) -> Signal a
+mergeMany original others =
     List.foldl Signal.merge original others
 
 
