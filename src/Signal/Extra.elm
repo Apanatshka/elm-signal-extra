@@ -12,6 +12,7 @@ module Signal.Extra
   , foldps'
   , runBuffer
   , runBuffer'
+  , deltas
   , delayRound
   , keepIf
   , keepWhen
@@ -40,7 +41,7 @@ For those too lazy to write a record or union type.
 @docs zip, zip3, zip4, unzip, unzip3, unzip4
 
 # Stateful
-@docs foldp', foldps, foldps', runBuffer, runBuffer', delayRound
+@docs foldp', foldps, foldps', runBuffer, runBuffer', deltas, delayRound
 
 # Switching
 @docs switchWhen,switchSample
@@ -218,6 +219,26 @@ runBuffer' l n input =
           else List.drop (l-n+1) prev ++ [inp]
   in
     foldp f l input
+
+
+{-| A signal of each change to the provided signal, as a tuple of old
+and new values.
+
+The initial value of the tuple is the initial value of the provided signal,
+duplicated. Thereafter, the first part of the tuple is the old value of the
+provided signal, and the second part is the new value.
+-}
+deltas : Signal a -> Signal (a, a)
+deltas signal =
+    let
+        step value delta =
+            (snd delta, value)
+
+        initial value =
+            (value, value)
+
+    in
+        foldp' step initial signal
 
 
 {-| Instead of delaying for some amount of time, delay for one round,
