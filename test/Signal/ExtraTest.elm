@@ -2,7 +2,7 @@ module Signal.ExtraTest where
 
 import Signal exposing (Mailbox, mailbox, send, foldp, sampleOn, (~), (<~))
 import Task exposing (Task, sequence, andThen)
-import Signal.Extra exposing (passiveMap2, withPassive, mapMany, andMap)
+import Signal.Extra exposing (passiveMap2, withPassive, mapMany, andMap, deltas)
 import ElmTest.Test exposing (..)
 import ElmTest.Assertion exposing (..)
 import Native.ApanatshkaSignalExtra
@@ -204,6 +204,53 @@ andMapAppliesFunctionIfValueSignalUpdates =
     >> test "andMap applies fn in first signal to the value of the second when it changes"
 
 
+deltasInitialValue : Task x Test
+deltasInitialValue =
+    let
+        mbox =
+            mailbox 0
+
+        signal =
+            deltas mbox.signal
+
+    in
+        sample signal
+        >>> assertEqual (0, 0)
+        >> test "deltas should start with the initial value of the signal duplicated"
+
+
+deltasOneUpdate : Task x Test
+deltasOneUpdate =
+    let
+        mbox =
+            mailbox 0
+
+        signal =
+            deltas mbox.signal
+
+    in
+        send mbox.address 1
+        >>- sample signal
+        >>> assertEqual (0, 1)
+        >> test "the first update to deltas should work"
+
+
+deltasTwoUpdates : Task x Test
+deltasTwoUpdates =
+    let
+        mbox =
+            mailbox 0
+
+        signal =
+            deltas mbox.signal
+
+    in
+        send mbox.address 1
+        >>- send mbox.address 2
+        >>- sample signal
+        >>> assertEqual (1, 2)
+        >> test "the second update to deltas should work"
+
 
 tests : Task x Test
 tests =
@@ -216,5 +263,8 @@ tests =
         , andMapAppliesSignalFunctionToSignal
         , andMapAppliesFunctionIfItUpdates
         , andMapAppliesFunctionIfValueSignalUpdates
+        , deltasInitialValue
+        , deltasOneUpdate
+        , deltasTwoUpdates
         ]
     >>> suite "Signal.Extra tests"
