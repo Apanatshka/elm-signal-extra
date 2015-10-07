@@ -1,41 +1,20 @@
 module Signal.Extra
-  ( (~>)
-  , andMap
-  , zip
-  , zip3
-  , zip4
-  , unzip
-  , unzip3
-  , unzip4
-  , foldp'
-  , foldps
-  , foldps'
-  , runBuffer
-  , runBuffer'
-  , deltas
-  , delayRound
-  , keepIf
-  , keepWhen
-  , sampleWhen
-  , switchWhen
-  , keepWhenI
-  , switchSample
-  , keepThen
-  , filter
-  , filterFold
-  , fairMerge
-  , mergeMany
-  , combine
-  , mapMany
-  , applyMany
-  , passiveMap2
-  , withPassive
+  ( (~>), andMap, (<~), (~)
+  , zip, zip3, zip4
+  , unzip, unzip3, unzip4
+  , foldp', foldps, foldps'
+  , runBuffer, runBuffer', deltas, delayRound
+  , keepIf, keepWhen, sampleWhen, switchWhen
+  , keepWhenI, switchSample, keepThen
+  , filter, filterFold
+  , fairMerge, mergeMany, combine, mapMany, applyMany
+  , passiveMap2, withPassive
   ) where
 {-| Utility functions that aren't in the `Signal` module from
 `elm-lang/core`.
 
 # Mapping
-@docs (~>), andMap
+@docs (<~), (~), (~>), andMap
 
 # Zipping and unzipping
 For those too lazy to write a record or union type.
@@ -54,7 +33,27 @@ For those too lazy to write a record or union type.
 @docs fairMerge, mergeMany, combine, mapMany, applyMany, passiveMap2, withPassive
 -}
 
-import Signal exposing (map,map2,map3,map4,(<~),(~),sampleOn,constant,foldp,merge,dropRepeats,filterMap)
+import Signal exposing (map,map2,map3,map4,sampleOn,constant,foldp,merge,dropRepeats,filterMap)
+import Debug
+
+
+{-| An alias for `Signal.map`. A prettier way to apply a function to the current value
+of a signal.
+
+    main : Signal Html
+    main =
+      view <~ model
+
+    model : Signal Model
+
+    view : Model -> Html
+-}
+(<~) : (a -> b) -> Signal a -> Signal b
+(<~) =
+  map
+
+infixl 4 <~
+
 
 {-| The `(<~)` operator, but flipped. Doesn't play well with the other
 two!
@@ -69,11 +68,10 @@ two!
 
 infixl 4 ~>
 
+
 {-| Apply a signal of functions to another signal. Like `Task.andMap`, this
 provides a way to combine several signals together into a data type that's
 easier to extend than `map2`, `map3`, etc.
-
-Equivalent to [Signal's ~ operator](http://package.elm-lang.org/packages/elm-lang/core/latest/Signal#~).
 
     type alias User =
         { name : String
@@ -89,7 +87,29 @@ Equivalent to [Signal's ~ operator](http://package.elm-lang.org/packages/elm-lan
 -}
 andMap : Signal (a -> b) -> Signal a -> Signal b
 andMap =
-  (~)
+  map2 (<|)
+
+
+{-| An alias for `andMap`. Intended to be paired with the `(<~)` operator, this
+makes it possible for many signals to flow into a function. Think of it as a
+fancy alias for `mapN`.  For example, the following declarations are equivalent:
+
+    main : Signal Element
+    main =
+      scene <~ Window.dimensions ~ Mouse.position
+
+    main : Signal Element
+    main =
+      map2 scene Window.dimensions Mouse.position
+
+You can use this pattern for as many signals as you want by using `(~)` a bunch
+of times, so you can go higher than `map5` if you need to.
+-}
+(~) : Signal (a -> b) -> Signal a -> Signal b
+(~) =
+  andMap
+
+infixl 4 ~
 
 
 {-| Zip two signals into a signal of pairs.
@@ -158,9 +178,8 @@ foldp' fun initFun input =
       Maybe.withDefault ini mb
       |> fun inp |> Just
     
-    fromJust (Just a) = a
   in
-    fromJust <~ merge (Just <~ initial) rest
+    unsafeFromJust <~ merge (Just <~ initial) rest
 
 
 {-| Like `foldp`, but with a hidden state
@@ -282,9 +301,8 @@ switchHelper filter b l r =
         (filter b          Nothing (Just <~ l))
         (filter (not <~ b) Nothing (Just <~ r))
     
-    fromJust (Just a) = a
   in
-    fromJust <~ merge base lAndR
+    unsafeFromJust <~ merge base lAndR
 
 {-| The old name for `Signal.filter`, which doesn't confuse you with what the `Bool` value means. 
 -}
@@ -327,10 +345,7 @@ filter it.
 -}
 keepWhenI : Signal Bool -> Signal a -> Signal a
 keepWhenI fs s = 
-  let
-    fromJust (Just a) = a
-  in
-    keepWhen (merge (constant True) fs) Nothing (Just <~ s) ~> fromJust
+  keepWhen (merge (constant True) fs) Nothing (Just <~ s) ~> unsafeFromJust
 
 
 {-| Filter a signal of optional values, discarding `Nothing`s.
@@ -487,3 +502,14 @@ withPassive =
 
 -- Give `withPassive` the same precedence as (~) so that it composes well
 infixl 4 `withPassive`
+
+
+-- Utility function for cases where we know we'll have a Just
+unsafeFromJust : Maybe a -> a
+unsafeFromJust maybe =
+  case maybe of
+    Just value ->
+      value
+
+    Nothing ->
+      Debug.crash "This case should have been unreachable"

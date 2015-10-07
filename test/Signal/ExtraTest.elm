@@ -1,8 +1,8 @@
 module Signal.ExtraTest where
 
-import Signal exposing (Mailbox, mailbox, send, foldp, sampleOn, (~), (<~))
+import Signal exposing (Mailbox, mailbox, send, foldp, sampleOn)
 import Task exposing (Task, sequence, andThen)
-import Signal.Extra exposing (passiveMap2, withPassive, mapMany, andMap, deltas)
+import Signal.Extra exposing (passiveMap2, withPassive, mapMany, andMap, deltas, (~), (<~))
 import ElmTest.Test exposing (..)
 import ElmTest.Assertion exposing (..)
 import Native.ApanatshkaSignalExtra

@@ -22,8 +22,8 @@ Some functions from the `Time` module that fit in.
 @docs Time, since, delay, timestamp
 -}
 
-import Signal exposing (Signal, (<~), (~))
-import Signal.Extra exposing ((~>))
+import Signal exposing (Signal)
+import Signal.Extra exposing ((~>), (~), (<~))
 import Signal.Discrete as Discrete
 import Time
 
