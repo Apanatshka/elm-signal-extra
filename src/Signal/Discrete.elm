@@ -14,7 +14,7 @@ value, but only when it updates. A prime example is `Mouse.clicks`.
 @docs folde
 -}
 
-import Signal exposing ((<~), (~), Signal)
+import Signal exposing (Signal)
 
 {-| At some point in the future Elm will probably support something like
 this:

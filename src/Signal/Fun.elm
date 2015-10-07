@@ -13,7 +13,7 @@ careful.
 @docs scan, premap, postmap, bimap
 -}
 
-import Signal exposing (Signal, (<~), (~))
+import Signal exposing (Signal)
 
 {-| Just a shorthand for signals of functions
 -}
