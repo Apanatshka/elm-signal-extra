@@ -27,8 +27,8 @@ events to your application logic.
 @docs toSignal, fromSignal
 -}
 
-import Signal exposing ((<~))
-import Signal.Extra as SignalE exposing ((~>))
+import Signal exposing (Signal)
+import Signal.Extra as SignalE exposing ((~>), (<~))
 import Signal.Time as SignalT exposing (Time)
 import Maybe exposing (Maybe(..))
 import Debug
